@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>横並びカード</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: sans-serif;
+        display: flex;
+        justify-content: center;
+        background: #f2f2f2;
+      }
+
+      .container {
+        display: flex;
+        gap: 20px; /* カード同士の間隔 */
+        max-width: 900px;
+        width: 100%;
+        flex-wrap: wrap; /* 画面が狭い時は折り返す */
+        justify-content: center;
+      }
+
+      .card {
+        flex: 1 1 300px; /* 幅は最小300px、余裕があれば広がる */
+        display: grid;
+        grid-template-rows: auto 1fr;
+        gap: 12px;
+        padding: 20px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      }
+
+      .card h2 {
+        margin: 0;
+        font-size: clamp(1.2rem, 4vw, 1.5rem);
+        color: #fff;
+        background: #007bff;
+        display: inline-block;
+        padding: 6px 16px;
+        border-radius: 6px;
+        margin-inline: auto;
+      }
+
+      .card p {
+        margin: 0;
+        line-height: 1.6;
+        color: #555;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h2>カード１</h2>
+        <p>
+          これは1つ目のカードの文章です。<br />arwarearesresresresres<br />arwarearesresresresres<br />arwarearesresresresres
+        </p>
+      </div>
+      <div class="card">
+        <h2>カード２</h2>
+        <p>これは2つ目のカードの文章です。</p>
+      </div>
+    </div>
+  </body>
+</html>

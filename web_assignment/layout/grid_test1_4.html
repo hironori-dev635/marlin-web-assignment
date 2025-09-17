@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grid test4レイアウト例</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: sans-serif;
+      }
+      .container {
+        padding: 20px;
+        /* background: #f2f2f2; */
+        display: flex;
+        justify-content: center;
+
+        /* 背景画像の設定 */
+        background-image: URL("images/hirayuPAKU3441_TP_V.jpg");
+        background-size: cover; /* 要素に合わせて比率変えずに切り取りフィット */
+        background-position: bottom; /* 画像を表示する基準位置*/
+        background-repeat: no-repeat;
+      }
+
+      .card {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 12px;
+        padding: 20px;
+        max-width: 400px;
+        width: 100%;
+        background: rgba(138, 163, 185, 0.5);
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(226, 212, 212, 0.938);
+        color: #fff;
+      }
+
+      .card h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: #fff; /* 文字を白に */
+        background: #007bff; /* 背景を青に */
+        display: inline-block; /* 文字幅＋余白だけ色を付ける */
+        padding: 6px 16px; /* 背景内の余白 */
+        border-radius: 6px; /* 角を少し丸く */
+        text-align: center; /* h2自身の中で中央寄せ */
+        margin-inline: auto; /* 親要素内で中央配置 */
+      }
+
+      .card p {
+        margin: 0;
+        line-height: 1.6;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <h2>見出しタイトル</h2>
+        <p>
+          これはサンプルの文章です。見出し部分に青い背景を付けて、中央に配置しています。
+          文字数が増えてもレイアウトは崩れにくいようになっています。
+        </p>
+        <small>※背景画像はcssで設置しています</small>
+      </div>
+    </div>
+  </body>
+</html>
