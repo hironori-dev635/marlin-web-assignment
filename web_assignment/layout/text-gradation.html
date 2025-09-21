@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="jp">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <style>
+    .text {
+      flex-direction: column;
+      display: flex;
+    }
+    .box1 {
+      display: inline-block;
+      font-size: 28px;
+      font-family: "Roboto", sans-serif;
+      font-weight: bold;
+      margin: 0 auto 5%;
+      background: linear-gradient(90deg, #58c6ff 0%, #076ad9 40%, #ff3bef 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .box2 {
+      display: inline-block;
+      font-size: 28px;
+      font-family: "Roboto", sans-serif;
+      font-weight: bold;
+      margin: 0 auto 5%;
+      background: linear-gradient(270deg, #58c6ff 0%, #076ad9 40%, #ff3bef 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .box3 {
+      display: inline-block;
+      font-size: 28px;
+      font-family: "Roboto", sans-serif;
+      font-weight: bold;
+      margin: 0 auto 5%;
+      background: linear-gradient(0deg, #58c6ff 0%, #076ad9 40%, #ff3bef 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .box4 {
+      display: inline-block;
+      font-size: 28px;
+      font-family: "Roboto", sans-serif;
+      font-weight: bold;
+      margin: 0 auto 5%;
+      background: linear-gradient(180deg, #58c6ff 0%, #076ad9 40%, #ff3bef 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+  <body>
+    <!-- 下から: 0deg   左から:90deg  上から:180deg  右から:270deg   -->
+    <div class="text">
+      <div class="box1">左から右へグラデーション</div>
+      <div class="box2">右から左へグラデーション</div>
+      <div class="box3">下から上へグラデーション</div>
+      <div class="box4">上から下へグラデーション</div>
+    </div>
+  </body>
+</html>

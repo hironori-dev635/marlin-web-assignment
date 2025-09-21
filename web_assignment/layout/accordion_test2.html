@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>シンプルアコーディオン（中央配置＋右側ボタン）</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        background-color: #f9f9f9;
+        padding: 40px;
+      }
+
+      .accordion {
+        width: 400px;
+      }
+
+      .accordion-item {
+        margin-bottom: 15px; /* 各見出しの間に余白 */
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        overflow: hidden;
+        background-color: #fff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      /* チェックボックスを隠す */
+      .accordion-item input {
+        display: none;
+      }
+
+      /* 見出し部分 */
+      .accordion-item label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between; /* 右端に＋ボタン */
+        padding: 12px 15px;
+        cursor: pointer;
+        font-weight: bold;
+        background-color: #f0f0f0;
+      }
+
+      /* プラスボタン */
+      .accordion-item label::after {
+        content: "+";
+        transition: transform 0.3s ease;
+        font-size: 20px;
+      }
+
+      /* 開いたときに−へ変更 */
+      .accordion-item input:checked + label::after {
+        content: "-";
+      }
+
+      /* コンテンツ部分 */
+      .accordion-content {
+        max-height: 0;
+        overflow: hidden;
+        padding: 0 15px;
+        background-color: #fafafa;
+        transition: max-height 0.3s ease, padding 0.3s ease;
+      }
+
+      .accordion-item input:checked ~ .accordion-content {
+        max-height: 200px; /* 内容に応じて調整 */
+        padding: 12px 15px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="accordion">
+      <div class="accordion-item">
+        <input type="checkbox" id="item1" />
+        <label for="item1">見出し1</label>
+        <div class="accordion-content">
+          <p>ここに中身の内容1が入ります。テキストや画像を置けます。</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <input type="checkbox" id="item2" />
+        <label for="item2">見出し2</label>
+        <div class="accordion-content">
+          <p>ここに中身の内容2が入ります。テキストや画像を置けます。</p>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <input type="checkbox" id="item3" />
+        <label for="item3">見出し3</label>
+        <div class="accordion-content">
+          <p>ここに中身の内容3が入ります。テキストや画像を置けます。</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
