@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>横並びの表（3列×4行 ×2）</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/ress/dist/ress.min.css" />
+    <style>
+      :root {
+        --card-bg: #ffffff;
+        --accent: #4699ca;
+        --border: #e0e6ea;
+        --text: #222;
+        --radius: 8px;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      /* 横並びコンテナ */
+      .sec-table-2 {
+        padding: 40px 20px;
+        display: flex;
+        justify-content: center;
+      }
+      .sec-table-2 table {
+        border-collapse: collapse; /* セルの線を重ねずスッキリ表示 */
+        border: 1px solid var(--border); /* 外枠を実線で囲む */
+        max-width: 800px; /*表の幅*/
+        width: 100%;
+      }
+      caption {
+        text-align: left;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--accent);
+        font-size: 16px;
+      }
+
+      thead th {
+        /* background: linear-gradient(180deg, #f3fbff, #eef7fb); */
+        background-color: #4699ca;
+        color: white;
+        font-weight: 700;
+        padding: 10px 12px;
+        border-bottom: 1px dashed var(--border); /* 縦線のみ */
+        /*border: 1px solid var(--border);*/ /* 縦線・横線すべて */
+        text-align: center;
+        font-size: 14px;
+      }
+
+      tbody td {
+        padding: 12px;
+        /*border-bottom: 1px dashed var(--border); */ /* 縦線のみ */
+        border: 1px solid var(--border); /* 縦線・横線すべて */
+        font-size: 14px;
+        vertical-align: middle;
+        /*width: 50%;*/ /* 列幅を指定すす場合 */
+        /* overflow: hidden;
+        text-overflow: ellipsis; */
+        /*white-space: nowrap; */ /* 長い文字は省略表示 */
+      }
+      table td:first-child {
+        background-color: rgb(170, 221, 255);
+        /* border-bottom: none; */
+      }
+
+      /* 画面が狭いとき（例: 600px以下）に「カード形式」に変形 */
+      @media (max-width: 600px) {
+        .sec-table-2 table {
+          border: none; /* 外枠を実線で囲む */
+        }
+        table,
+        tbody,
+        tr,
+        td {
+          display: block;
+          width: 100%;
+        }
+
+        tr {
+          margin-bottom: 0.7rem; /*表の間隔*/
+          border: 1px solid var(--border);
+          /* border-radius: 6px; */
+          overflow: hidden;
+        }
+
+        td {
+          /* display: flex;
+          justify-content: space-between;
+          padding: 8px; */
+        }
+
+        /* 1列目（見出し）は太字にして左、2列目（内容）は右 */
+        td:first-child {
+          /* font-weight: bold;
+          background: #f9f9f9; */
+        }
+
+        td:last-child {
+          /* text-align: right; */
+        }
+
+        caption {
+          caption-side: top; /* デフォルトだけど念のため */
+          display: block; /* テーブルの幅に縛られなくなる */
+          white-space: nowrap; /* 折り返し禁止 */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="sec-table-2">
+      <!-- 表 -->
+
+      <table aria-label="サンプル表C">
+        <caption>
+          表 C（2列 × 4行）
+        </caption>
+
+        <tbody>
+          <tr>
+            <td>Row 1</td>
+            <td>データ A1</td>
+          </tr>
+          <tr>
+            <td>Row 2</td>
+            <td>データ A2</td>
+          </tr>
+          <tr>
+            <td>Row 3</td>
+            <td>データ A3</td>
+          </tr>
+          <tr>
+            <td>Row 4</td>
+            <td>データ A4</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </body>
+</html>

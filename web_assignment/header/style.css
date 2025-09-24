@@ -1,102 +1,118 @@
 header {
-    height: 20vh;
-    /* background-color: darkcyan; */
+  height: 20vh;
+  /* background-color: darkcyan; */
 }
 
-.nav_container{
-    width: 80%;
-    height: 100%;
-    margin: 0 auto;
-    display: flex;
-    
+.nav_container {
+  width: 80%;
+  height: 100%;
+  margin: 0 auto;
+  display: flex;
 }
 
-.nav_name{
-    width: 20%;
-    /* background-color: aqua; */
-    display: flex;
-    justify-content: center;
-    align-items: center;
+.nav_name {
+  width: 20%;
+  /* background-color: aqua; */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
-.name_box{
-
-    width: 70%;
-    height: 70%;
-    /* background-color: cornflowerblue; */
-    display: grid;
-    place-items: center;
-    color: #4699ca;
-     text-decoration: none;
-     font-size: larger;
+.name_box {
+  width: 70%;
+  height: 70%;
+  /* background-color: cornflowerblue; */
+  display: grid;
+  place-items: center;
+  color: #4699ca;
+  text-decoration: none;
+  font-size: larger;
 }
 
 .nav_buttons {
-    width: 80%;
-    display: flex;
-    /* background-color: bisque; */
-  
+  width: 80%;
+  display: flex;
+  /* background-color: bisque; */
 }
 
-.nav_buttons a{
-    flex: 1;
-     text-decoration: none;
+.nav_buttons a {
+  flex: 1;
+  text-decoration: none;
 }
-.nav_buttons .nav_button{
-     display:flex;
-    /* flex-direction: column; */
-    /* justify-content: center; */
-    align-items: center; 
-   /* color: brown; */
+.nav_buttons .nav_button {
+  display: flex;
+  /* flex-direction: column; */
+  /* justify-content: center; */
+  align-items: center;
+  /* color: brown; */
+
+  position: relative; /* 疑似要素用 */
 }
 
-.nav_button .button_items{
+.nav_button .button_items {
   width: 100%;
   height: 80%;
-    /* background-color: blueviolet; */
-    border-left: 1px dashed #4699ca;
-    display: flex;
-    flex-direction: column;
-    /* justify-content: center; */
-    align-items: center; 
-    
+  /* background-color: blueviolet; */
+  border-left: 1px dashed #4699ca;
+  display: flex;
+  flex-direction: column;
+  /* justify-content: center; */
+  align-items: center;
 }
 
-.nav_button .button_items .icon_box{
-height: 60%;
-/* background-color: mediumpurple; */
-display: flex;
-justify-content: center;
+.nav_button .button_items .icon_box {
+  height: 60%;
+  /* background-color: mediumpurple; */
+  display: flex;
+  justify-content: center;
 }
-.nav_button .icon_svg{
-  width: 30%; 
+.nav_button .icon_svg {
+  width: 30%;
   height: 100%;
-    fill: #4699ca;
+  fill: #4699ca;
+  transition: opacity 0.5s ease; /* ← じんわり */
 }
-.nav_button .button_items .text_box{
- height: 40%;
- /* background-color: burlywood;  */
- display: flex; 
- align-items: center;
-text-align: center;
-color: #4699ca;
-
+.nav_button .button_items .text_box {
+  height: 40%;
+  /* background-color: burlywood;  */
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #4699ca;
+  transition: opacity 0.5s ease; /* ← じんわり */
 }
-.nav_buttons .button_8{
-    background-color: #4699ca;
-}
-.nav_buttons .button_8 .icon_svg{
-   fill:white;
-}
-.nav_buttons .button_8 .text_box{
-   color:white;
+.nav_button:hover {
+  /* background-color: #4699ca; */
 }
 
+.nav_button:hover .icon_svg {
+  fill: white;
+}
+.nav_button:hover .text_box {
+  color: white;
+}
+/* ホバー時、背景色変更ではうまく点線が隠れないので疑似要素で */
+.nav_button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: -1px; /* ← ここで隣の線を1px分隠す */
+  bottom: 0;
+  background-color: #4699ca;
+  z-index: -1;
+
+  opacity: 0; /* ← 通常時は透明 */
+  transition: opacity 0.5s ease; /* ← じんわり */
+}
+.nav_button:hover::before {
+  opacity: 1; /* ← ホバー時に出てくる */
+}
 /* section1 */
-.hero{
-    height: 100vh;
-    background-image: url("#");
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
+.hero {
+  height: 100vh;
+  background-image: url("#");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
 }
 /* section1 */
