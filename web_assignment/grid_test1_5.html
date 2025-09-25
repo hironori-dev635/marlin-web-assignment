@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grid test4レイアウト例</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: sans-serif;
+      }
+      .container {
+        position: relative; /* 配置する子要素の基準とする */
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .bg-img {
+        position: absolute;
+        inset: 0; /* top:0; right:0; bottom:0; left:0; 要素の四辺の位置を一括で指定*/
+        object-view-box: inset(80px 20px 30px 0px);
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* 要素いっぱいに拡大縮小 */
+        object-position: center; /* 見せたい部分を調整 */
+        z-index: 0; /* カードの後ろに配置 */
+      }
+      .card {
+        position: relative; /* 背景画像より手前に表示 */
+        z-index: 1;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 12px;
+        padding: 20px;
+        max-width: 400px;
+        width: 100%;
+        background: rgba(138, 163, 185, 0.5);
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(226, 212, 212, 0.938);
+        color: #fff;
+      }
+
+      .card h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: #fff; /* 文字を白に */
+        background: #007bff; /* 背景を青に */
+        display: inline-block; /* 文字幅＋余白だけ色を付ける */
+        padding: 6px 16px; /* 背景内の余白 */
+        border-radius: 6px; /* 角を少し丸く */
+        text-align: center; /* h2自身の中で中央寄せ */
+        margin-inline: auto; /* 親要素内で中央配置 */
+      }
+
+      .card p {
+        margin: 0;
+        line-height: 1.6;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- 背景画像 -->
+      <img class="bg-img" src="images/hirayuPAKU3441_TP_V.jpg" alt="" />
+
+      <div class="card">
+        <h2>見出しタイトル</h2>
+        <p>
+          これはサンプルの文章です。見出し部分に青い背景を付けて、中央に配置しています。
+          文字数が増えてもレイアウトは崩れにくいようになっています。
+        </p>
+        <small>※背景画像はimgタグで設置しています</small>
+      </div>
+    </div>
+  </body>
+</html>

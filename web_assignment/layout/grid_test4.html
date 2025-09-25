@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grid レイアウト例</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: sans-serif;
+        display: flex;
+        justify-content: center;
+        background: #f2f2f2;
+      }
+
+      .card {
+        /* display: grid;
+        grid-template-rows: auto 1fr; */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 20px;
+        max-width: 400px;
+        width: 100%;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      }
+
+      .card h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        color: #fff; /* 文字を白に */
+        background: #007bff; /* 背景を青に */
+        display: inline-block; /* 文字幅＋余白だけ色を付ける */
+        padding: 6px 16px; /* 背景内の余白 */
+        border-radius: 6px; /* 角を少し丸く */
+        text-align: center; /* h2自身の中で中央寄せ */
+        margin-inline: auto; /* 親要素内で中央配置 */
+      }
+
+      .card p {
+        margin: 0;
+        line-height: 1.6;
+        color: #555;
+        text-align: center;
+      }
+
+      .card-middle {
+        width: 250px; /* 幅を設定したいなら */
+
+        /* margin: 0 auto;  */
+        /* ← 左右オートで中央寄せ */
+        background: url("images/2037400.jpg") center/contain no-repeat;
+        padding: 20px 10px;
+        color: blue;
+        text-align: center; /* ← この中の文字を中央 */
+      }
+      .card-list {
+        margin-right: 40px;
+      }
+      .card-list li {
+        /* padding: 0.5em; */
+        border-bottom: 1px dashed #ccc; /* 下に点線 */
+        text-align: center; /* 中央揃え */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <p>
+        これはサンプルの文章です。中間部分に背景画像を付けて、文字を中央に配置しています。
+        リストもその下に配置しています。文字数が増えてもレイアウトは崩れにくいようになっています。
+      </p>
+      <div class="card-middle">中間の文字（画像バック）</div>
+      <ul class="card-list">
+        <li>AAAA</li>
+        <li>BBBB</li>
+        <li>CCCC</li>
+      </ul>
+    </div>
+  </body>
+</html>
