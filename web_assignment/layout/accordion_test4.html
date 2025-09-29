@@ -37,15 +37,17 @@
         display: flex;
         align-items: center;
         justify-content: space-between; /* 右端にアイコン */
-        padding: 12px 15px;
+        padding: 12px 15px 12px 0px;
         cursor: pointer;
         font-weight: bold;
         background-color: #4699ca;
         color: #fff;
-
-     
       }
-
+      .q-text {
+        text-indent: -1em;
+        padding-left: 2em;
+        padding-right: 1em;
+      }
       /* アイコンのスタイル */
       .accordion-item label svg {
         width: 20px;
@@ -147,7 +149,10 @@
       <div class="accordion-item">
         <input type="checkbox" id="item1" />
         <label for="item1">
-          見出し1aaaaaaaaaaaあああああああああああああああああああああああああああああああああああああああああああああああああ
+          <!-- <span class="q-mark">Q.</span> -->
+          <span class="q-text">
+            Q.見出し1aaaaaaaaaaaあああああああああああああああああああああああああああああああああああああああああああああああああ
+          </span>
           <span class="icon-plus">
             <svg><use href="#icon-plus"></use></svg>
           </span>
@@ -165,7 +170,8 @@
       <div class="accordion-item">
         <input type="checkbox" id="item2" />
         <label for="item2">
-          見出し2
+          <span class="q-text"> 見出し2 </span>
+
           <span class="icon-plus">
             <svg><use href="#icon-plus"></use></svg>
           </span>
@@ -181,7 +187,7 @@
       <div class="accordion-item">
         <input type="checkbox" id="item3" />
         <label for="item3">
-          見出し3
+          <span class="q-text"> 見出し3 </span>
           <span class="icon-plus">
             <svg><use href="#icon-plus"></use></svg>
           </span>

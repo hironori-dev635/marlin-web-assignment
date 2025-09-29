@@ -22,15 +22,20 @@
       /* 横並びコンテナ */
       .sec-table-3 {
         padding: 40px 20px;
-        display: flex;
-        justify-content: center;
+        /* display: flex; */
+        /* justify-content: center; */
       }
-
+      .table_wrap {
+        overflow-x: auto; /* 横スクロール */
+      }
       .sec-table-3 table {
         border-collapse: collapse; /* セルの線を重ねずスッキリ表示 */
         border: 1px solid var(--border); /* 外枠を実線で囲む */
         max-width: 800px; /*表の幅*/
         width: 100%;
+        margin: 0 auto;
+
+        min-width: 560px; /* 表の最小幅を設定ここでスクロール発生 */
       }
 
       caption {
@@ -41,7 +46,7 @@
         font-size: 16px;
       }
 
-      thead th {
+      thead .header1 th {
         /* background: linear-gradient(180deg, #f3fbff, #eef7fb); */
         background-color: #4699ca;
         color: white;
@@ -52,8 +57,19 @@
         text-align: center;
         font-size: 14px;
       }
+      thead .header2 th {
+        /* background: linear-gradient(180deg, #f3fbff, #eef7fb); */
+        background-color: #70abce;
+        color: white;
+        font-weight: 700;
+        padding: 10px 12px;
+        /*border-bottom: 1px solid var(--border); */ /* 縦線のみ */
+        border: 1px solid var(--border); /* 縦線・横線すべて */
+        text-align: center;
+        font-size: 14px;
+      }
       table td:first-child {
-        background-color: rgb(170, 221, 255);
+        /* background-color: rgb(170, 221, 255); */
       }
       tbody td {
         padding: 12px;
@@ -75,103 +91,64 @@
 
       /* 画面が狭いとき（例: 600px以下）に「カード形式」に変形 */
       @media (max-width: 600px) {
-        .sec-table-3 table {
-          border: none; /* 外枠を実線で囲む */
-        }
-        thead,
-        /* thead tr, */
-        thead tr th,
-        table,
-        tbody,
-        tr,
-        td {
-          display: block;
-          width: 100%;
-        }
-        tbody {
-          /* display: flex;
-          flex-direction: column;
-          justify-content: space-between; */
-        }
-        tr {
-          margin-bottom: 0.7rem; /*表の間隔*/
-          border: 1px solid var(--border);
-          /* border-radius: 6px; */
-          overflow: hidden;
-        }
-
-        td {
-          /* display: flex;
-          justify-content: space-between;
-          padding: 8px; */
-        }
-
-        /* 1列目（見出し）は太字にして左、2列目（内容）は右 */
-        td:first-child {
-          /* font-weight: bold;
-          background: #f9f9f9; */
-        }
-
-        td:last-child {
-          /* text-align: right; */
-        }
-
-        caption {
-          caption-side: top; /* デフォルトだけど念のため */
-          display: block; /* テーブルの幅に縛られなくなる */
-          white-space: nowrap; /* 折り返し禁止 */
+        .table_wrap {
+          position: relative;
         }
       }
     </style>
   </head>
   <body>
     <div class="sec-table-3">
-      <!-- 左の表 -->
+      <div class="table_wrap">
+        <!-- tableの親要素 -->
+        <span class="table_arrow"></span>
+        <!-- スクロールを伝える矢印 -->
 
-      <table aria-label="サンプル表D">
-        <caption>
-          表 D（3列 × 4行）
-        </caption>
-        <thead>
-          <tr class="header1">
-            <th colspan="4">ああああああ</th>
-            <!-- <th>値</th>
+        <table aria-label="サンプル表D">
+          <caption>
+            表 D（3列 × 4行）
+          </caption>
+          <thead>
+            <tr class="header1">
+              <th colspan="4">ああああああ</th>
+              <!-- <th>値</th>
             <th>備考</th> -->
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>項目</td>
-            <td>値1</td>
-            <td>値2</td>
-            <td>備考</td>
-          </tr>
-          <tr>
-            <td>Row 1</td>
-            <td>データ A1</td>
-            <td>データ B1</td>
-            <td>メモ1</td>
-          </tr>
-          <tr>
-            <td>Row 2</td>
-            <td>データ A2</td>
-            <td>データ B2</td>
-            <td>メモ2</td>
-          </tr>
-          <tr>
-            <td>Row 3</td>
-            <td>データ A3</td>
-            <td>データ B3</td>
-            <td>メモ3</td>
-          </tr>
-          <tr>
-            <td>Row 4</td>
-            <td>データ A4</td>
-            <td>データ B4</td>
-            <td>メモ4</td>
-          </tr>
-        </tbody>
-      </table>
+            </tr>
+            <tr class="header2">
+              <th>項目</th>
+              <th>値1</th>
+              <th>値2</th>
+              <th>備考</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Row 1</td>
+              <td>データ A1</td>
+              <td>データ B1</td>
+              <td>メモ1</td>
+            </tr>
+            <tr>
+              <td>Row 2</td>
+              <td>データ A2</td>
+              <td>データ B2</td>
+              <td>メモ2</td>
+            </tr>
+            <tr>
+              <td>Row 3</td>
+              <td>データ A3</td>
+              <td>データ B3</td>
+              <td>メモ3</td>
+            </tr>
+            <tr>
+              <td>Row 4</td>
+              <td>データ A4</td>
+              <td>データ B4</td>
+              <td>メモ4</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </body>
 </html>

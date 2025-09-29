@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Grid レイアウト例</title>
+    <style>
+      body {
+        margin: 0;
+        /* 
+        font-family: sans-serif;
+        display: flex;
+        justify-content: center;
+        background: #f2f2f2; */
+      }
+      .sec-gt5 {
+        padding: 20px;
+        font-family: sans-serif;
+        display: flex;
+        justify-content: center;
+      }
+      .card {
+        max-width: 500px;
+        width: 100%;
+        padding: 20px;
+        /* margin: 0 auto; */
+        /* display: grid;
+        grid-template-rows: auto 1fr; */
+        display: flex;
+        flex-direction: row;
+        /* align-items: center; */
+        justify-content: center;
+        /* gap: 12px; */
+        flex-wrap: wrap;
+
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      }
+      .card-left,
+      .card-right {
+        flex: 1;
+      }
+      .card-left {
+        min-width: 200px;
+      }
+      .card-right {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .card p {
+        margin: 0;
+        line-height: 1.6;
+        color: #555;
+        /* text-align: center; */
+      }
+
+      .img_seep {
+        width: 200px;
+        height: 200px;
+        /* background-color: antiquewhite; */
+        object-fit: cover;
+        border: 1px solid red;
+        object-view-box: inset(80px 50px 30px 0px);
+        /* position: absolute; */
+        /* object-position: 50% 20%;  */
+        /* top: 50%;
+        left: 90px;
+        border-radius: 50%; */
+        /* clip-path: circle(); */
+        border-radius: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="sec-gt5">
+      <div class="card">
+        <div class="card-left">
+          <p>
+            これはサンプルのレイアウトです。カードを中央部分で分割し、左側に文字を配置して、右側にに画像を配置しています。
+            テキストエリアを画像下にも配置しています。画面幅を変更してもレイアウトは崩れにくいようになっています。
+          </p>
+        </div>
+        <div class="card-right">
+          <img src="images/animal_hitsuji.png" class="img_seep" />
+          <div>aaaaaa<br />aaaaaa<br />aaaaaa<br /></div>
+        </div>
+      </div>
+    </section>
+  </body>
+</html>
