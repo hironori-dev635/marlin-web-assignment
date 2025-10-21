@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>横並びカード</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: sans-serif;
+        display: flex;
+        justify-content: center;
+        background: #f2f2f2;
+      }
+
+      .container {
+        display: flex;
+        gap: 20px; /* カード同士の間隔 */
+        max-width: 900px;
+        width: 100%;
+        flex-wrap: wrap; /* 画面が狭い時は折り返す */
+        justify-content: center;
+      }
+
+      .card {
+        flex: 1 1 300px; /* 幅は最小300px、余裕があれば広がる */
+        width: 600px;
+        display: flex;
+        flex-direction: column;
+
+        padding: 20px;
+        background: #dfdfdf;
+        border-radius: 12px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      }
+      .card img {
+        width: 100%;
+        border-radius: 12px;
+        margin-bottom: 20px;
+      }
+      .card-buttom {
+        /* height: 60px; */
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        gap: 20px;
+      }
+
+      a {
+        border-radius: 3px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        width: 100%;
+        transition: 0.3s ease-in-out;
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .b-left {
+        flex: 1;
+        background-color: rgb(255, 255, 255);
+        /* display: flex; */
+      }
+      .b-right {
+        flex: 2;
+        background-color: rgb(97, 172, 241);
+        color: #fff;
+      }
+      .b-right p {
+        padding: 10px 25px;
+        text-align: center;
+        color: #555;
+        margin: 0;
+      }
+      .b-left p {
+        /* padding: 10px 25px; */
+        text-align: center;
+        color: #555;
+        margin: 0;
+      }
+      .b-left:hover {
+        background: rgb(234, 245, 255);
+      }
+      .b-right:hover {
+        background: rgb(117, 188, 255);
+      }
+
+      .wating-inner {
+        display: flex;
+        align-items: baseline;
+      }
+      .waiting-num {
+        font-size: 25px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <img src="images/89190.jpg" class="img" />
+        <div class="card-buttom">
+          <a class="button b-left" href="#">
+            <div class="wating-inner">
+              <p class="waiting-num">0</p>
+              <p>人</p>
+            </div>
+          </a>
+
+          <a class="button b-right" href="#"
+            ><p style="color: #fff">予約する</p></a
+          >
+        </div>
+      </div>
+      <div class="card">
+        <img src="images/89190.jpg" class="img" />
+        <div class="card-buttom">
+          <a class="button b-left" href="#">
+            <div class="wating-inner">
+              <p class="waiting-num">0</p>
+              <p>人</p>
+            </div>
+          </a>
+
+          <a class="button b-right" href="#"
+            ><p style="color: #fff">予約する</p></a
+          >
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
