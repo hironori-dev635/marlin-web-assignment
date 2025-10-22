@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>横並びカード</title>
+    <style>
+      body {
+        padding: 20px;
+        background-color: rgb(231, 231, 231);
+      }
+
+      .container {
+        max-width: 1700px;
+        width: 100%;
+        margin: 0 auto;
+        display: flex;
+
+        justify-content: center;
+        flex-wrap: wrap; /*画面が狭い時は折り返す */
+        gap: 20px; /* カード同士の間隔 */
+      }
+
+      .card {
+        /*flex: 1 1 700px; /* 幅は最小300px、余裕があれば広がる */
+        width: 700px;
+        display: flex;
+        /* margin: 0 auto; */
+        /* background: #ffffff; */
+      }
+      .card-img-area {
+        flex: 3;
+        display: block;
+      }
+      img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        border-radius: 12px 0 0 12px;
+      }
+      .card-button-area {
+        flex: 1;
+        background-color: rgb(212, 212, 212);
+        padding: 10px;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+        gap: 10px;
+
+        border-radius: 0 12px 12px 0;
+      }
+
+      .b-left {
+        flex: 2;
+        width: 100%;
+        background-color: rgb(255, 255, 255);
+        text-decoration: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        border-radius: 12px;
+      }
+      .b-left .wating-inner {
+        display: flex;
+        align-items: baseline;
+      }
+      .b-left p {
+        /* padding: 10px 25px; */
+        text-align: center;
+        color: #555;
+        margin: 0;
+      }
+      .b-left:hover {
+        background: rgb(234, 245, 255);
+      }
+
+      .b-right {
+        flex: 1;
+        width: 100%;
+        background-color: rgb(97, 172, 241);
+        color: #fff;
+        text-decoration: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        border-radius: 12px;
+      }
+      .b-right p {
+        /* padding: 10px 25px; */
+        text-align: center;
+        color: #555;
+        margin: 0;
+        font-size: 20px;
+      }
+
+      .b-right:hover {
+        background: rgb(117, 188, 255);
+      }
+
+      .waiting-num {
+        font-size: 40px;
+      }
+
+      .hiddin-card {
+        /* background-color: aqua; */
+        width: 700px;
+      }
+      /* @media (max-width: 1675px) {
+        .container {
+          justify-content: center;
+        }
+      } */
+      @media (max-width: 800px) {
+        .card {
+          flex-direction: column;
+        }
+        img {
+          border-radius: 12px 12px 0 0;
+        }
+        .card-button-area {
+          flex-direction: row;
+          border-radius: 0 0 12px 12px;
+        }
+        .b-left,
+        .b-right {
+          flex: 1;
+          height: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card">
+        <div class="card-img-area">
+          <img src="images/89190.jpg" class="img" />
+        </div>
+        <div class="card-button-area">
+          <a class="button b-left" href="#">
+            <div class="wating-inner">
+              <p class="waiting-num">0</p>
+              <p>人</p>
+            </div>
+          </a>
+
+          <a class="button b-right" href="#">
+            <p style="color: #fff">予約する</p>
+          </a>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-img-area">
+          <img src="images/89190.jpg" class="img" />
+        </div>
+        <div class="card-button-area">
+          <a class="button b-left" href="#">
+            <div class="wating-inner">
+              <p class="waiting-num">0</p>
+              <p>人</p>
+            </div>
+          </a>
+
+          <a class="button b-right" href="#">
+            <p style="color: #fff">予約する</p>
+          </a>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-img-area">
+          <img src="images/89190.jpg" class="img" />
+        </div>
+        <div class="card-button-area">
+          <a class="button b-left" href="#">
+            <div class="wating-inner">
+              <p class="waiting-num">0</p>
+              <p>人</p>
+            </div>
+          </a>
+
+          <a class="button b-right" href="#">
+            <p style="color: #fff">予約する</p>
+          </a>
+        </div>
+      </div>
+      <div class="hiddin-card"></div>
+    </div>
+  </body>
+</html>
