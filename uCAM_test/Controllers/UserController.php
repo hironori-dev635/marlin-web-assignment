@@ -40,7 +40,7 @@ class UserController extends Controller
            ->paginate($perPage)
             ->appends(['perPage' => $perPage]); // ページ移動時に保持
 
-        return Inertia::render('Users/Index', [
+        return Inertia::render('Users/Index_20251127', [
             'users' => $users,
             'perPage' => (int)$perPage,
             'sortBy' => $sortBy,
@@ -49,6 +49,49 @@ class UserController extends Controller
         ]);
     }
 
+ public function indexPV(Request $request)
+{   
+    // ソート
+    $sortBy = $request->input('sortBy', 'id');
+    $sortOrder = $request->input('sortOrder', 'asc');
+
+    // PrimeVue sortOrder = 1 or -1 を Laravel 用に変換
+    if ($sortOrder == 1) {
+        $sortOrder = 'asc';
+    } elseif ($sortOrder == -1) {
+        $sortOrder = 'desc';
+    }
+
+    // ページネーション
+    $perPage = $request->input('perPage', 10);
+
+    // 検索
+    $search = $request->get('search');
+
+    $users = User::select('id', 'name', 'email')
+        ->when($search, function ($query, $search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        })
+        ->orderBy($sortBy, $sortOrder)
+        ->paginate($perPage)
+        ->appends([
+            'perPage' => $perPage,
+            'sortBy' => $sortBy,
+            'sortOrder' => $sortOrder,
+            'search' => $search,
+        ]);
+
+    return Inertia::render('Users/Index_PV', [
+        'users'      => $users,
+        'perPage'    => (int)$perPage,
+        'sortBy'     => $sortBy,
+        'sortOrder'  => $sortOrder,
+        'filters'    => ['search' => $search],
+    ]);
+}
 
 
 
@@ -142,20 +185,25 @@ public function search2(Request $request)
 }
 public function search3(Request $request)
 {
-    $search = $request->get('search');
+    $search = $request->get('search'); // 文字列または配列
 
- 
-$users = User::select('id', 'name', 'email')
-    ->when($search, function ($query, $search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%");
-        });
-    }, function ($query) {
-        // searchが空なら結果ゼロ
-        $query->whereRaw('0=1');
-    })
-    ->get();
+    $users = User::select('id','name')
+        ->when($search, function($query, $search){
+            $query->where(function($q) use ($search){
+                if (is_array($search)) {
+                    // 配列なら orWhere で複数条件
+                    foreach($search as $char){
+                        $q->orWhere('name', 'like', "{$char}%");
+                    }
+                } else {
+                    // 文字列なら単発検索
+                    $q->where('name', 'like', "{$search}%");
+                }
+            });
+        }, function($query){
+            $query->whereRaw('0=1'); // 検索結果がなしならゼロ件
+        })
+        ->get();
     return Inertia::render('Users/UserSearch3', [
         'users' => $users,
         'filters' => [
