@@ -2,7 +2,7 @@
     <div class="p-4">
         <h1 class="text-xl font-bold mb-4">投稿管理</h1>
 
-        <!-- フォーム -->
+        <!-- 新規投稿フォーム -->
         <form @submit.prevent="saveItem" class="mb-4 flex h-12">
             <!-- <input v-model="form.name" placeholder="名前" class="border p-1" /> -->
             <input

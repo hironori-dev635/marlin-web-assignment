@@ -2,16 +2,18 @@
     <div class="p-4">
         <div class="w-full max-w-7xl m-auto">
             <h1 class="text-xl font-bold mb-4">{{ title }}</h1>
-
+            <div v-if="errors.name" class="text-red-500">
+                {{ errors.name }}
+            </div>
+            <div class="flex items-center bg-gray-300 py-4 rounded-md">
+                <div class="w-24 text-center">ID</div>
+                <div class="flex-1 ml-4">{{ label }}</div>
+            </div>
             <div class="">
                 <!-- 新規登録 -->
-                <div v-if="errors.name" class="text-red-500">
-                    {{ errors.name }}
-                </div>
-                <div
-                    class="flex items-center py-2 bg-blue-200 border-b-2 border-x-2 border-gray-400"
-                >
-                    <div class="w-24"></div>
+
+                <div class="flex items-center py-2 border-b-2 border-gray-300 hover:bg-gray-100">
+                    <div class="w-24 text-center"></div>
                     <form
                         @submit.prevent="saveItem"
                         class="gap-2 flex h-12 flex-1"
@@ -20,12 +22,12 @@
                             type="text"
                             name="name"
                             v-model="newItemForm.name"
-                            class="border p-1 flex-1 rounded-md"
+                            class="border p-1 flex-1 rounded-md border-gray-300"
                             :placeholder="label + 'を入力'"
                         />
                         <button
                             type="submit"
-                            class="bg-blue-500 text-white px-2 mr-2 w-24 rounded-md"
+                            class="hover:bg-green-500 hover:text-white duration-300 px-2 mr-2 w-24 rounded-md"
                         >
                             保存
                         </button>
@@ -37,7 +39,7 @@
                 <div
                     v-for="item in items"
                     :key="item.id"
-                    class="flex items-center py-2 hover:bg-blue-100 border-b-2 border-x-2 border-gray-400"
+                    class="flex items-center py-2 hover:bg-gray-100 border-b-2 border-gray-300"
                 >
                     <div class="w-24 text-center">{{ item.id }}</div>
                     <form
@@ -47,18 +49,18 @@
                         <input
                             type="text"
                             v-model="item.name"
-                            class="border p-1 flex-1 rounded-md"
+                            class="border p-1 flex-1 rounded-md border-gray-300"
                         />
                         <button
                             type="submit"
-                            class="bg-blue-500 text-white px-2 mr-2 w-24 rounded-md"
+                            class="hover:bg-blue-500 hover:text-white duration-300 px-2 mr-2 w-24 rounded-md"
                         >
                             更新
                         </button>
                     </form>
                     <button
                         @click="deleteItem(item.id)"
-                        class="bg-red-500 text-white px-2 mr-2 h-12 w-24 rounded-md"
+                        class="hover:bg-red-500 hover:text-white duration-300 px-2 mr-2 h-12 w-24 rounded-md"
                     >
                         削除
                     </button>
