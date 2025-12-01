@@ -2,70 +2,88 @@
     <div class="p-4">
         <div class="w-full max-w-7xl m-auto">
             <h1 class="text-xl font-bold mb-4">{{ title }}</h1>
-            <div v-if="errors.name" class="text-red-500">
+
+            <!-- エラー表示 -->
+            <div v-if="errors.name" class="text-red-500 mb-2">
                 {{ errors.name }}
             </div>
-            <div class="flex items-center bg-gray-300 py-4 rounded-md">
-                <div class="w-24 text-center">ID</div>
-                <div class="flex-1 ml-4">{{ label }}</div>
-            </div>
-            <div class="">
-                <!-- 新規登録 -->
 
-                <div class="flex items-center py-2 border-b-2 border-gray-300 hover:bg-gray-100">
-                    <div class="w-24 text-center"></div>
-                    <form
-                        @submit.prevent="saveItem"
-                        class="gap-2 flex h-12 flex-1"
-                    >
-                        <input
-                            type="text"
-                            name="name"
-                            v-model="newItemForm.name"
-                            class="border p-1 flex-1 rounded-md border-gray-300"
-                            :placeholder="label + 'を入力'"
-                        />
-                        <button
-                            type="submit"
-                            class="hover:bg-green-500 hover:text-white duration-300 px-2 mr-2 w-24 rounded-md"
-                        >
-                            保存
-                        </button>
-                    </form>
-                    <div class="w-24 px-2 mr-2"></div>
-                </div>
-                <!-- 一覧 -->
+            <table
+                class="w-full table-fixed border-collapse border border-gray-300"
+            >
+                <colgroup>
+                    <col style="width: 80px" />
+                    <!-- ID -->
+                    <col style="width: 1fr" />
+                    <!-- 名前 -->
+                    <col style="width: 150px" />
+                    <!-- 操作 -->
+                    <col style="width: 150px" />
+                    <!-- 操作 -->
+                </colgroup>
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="border p-2 text-center">ID</th>
+                        <th class="border p-2 text-center">{{ label }}</th>
+                        <th class="border p-2 text-center" colspan="2">操作</th>
+                    </tr>
+                </thead>
 
-                <div
-                    v-for="item in items"
-                    :key="item.id"
-                    class="flex items-center py-2 hover:bg-gray-100 border-b-2 border-gray-300"
-                >
-                    <div class="w-24 text-center">{{ item.id }}</div>
-                    <form
-                        @submit.prevent="updateItem(item.id, item.name)"
-                        class="flex h-12 gap-2 flex-1"
+                <tbody>
+                    <!-- 新規登録行 -->
+                    <tr class="bg-gray-50">
+                        <td class="border p-2 text-center"></td>
+                        <td class="border p-2">
+                            <input
+                                type="text"
+                                v-model="newItemForm.name"
+                                class="border p-1 w-full rounded-md border-gray-300"
+                                :placeholder="label + 'を入力'"
+                            />
+                        </td>
+                        <td class="border p-2 text-center" colspan="2">
+                            <button
+                                @click="saveItem"
+                                class="px-3 py-1 w-24 rounded-md bg-green-500 text-white hover:bg-green-600 duration-300"
+                            >
+                                保存
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- 一覧・編集行 -->
+                    <tr
+                        v-for="item in items"
+                        :key="item.id"
+                        class="hover:bg-gray-100 border-t"
                     >
-                        <input
-                            type="text"
-                            v-model="item.name"
-                            class="border p-1 flex-1 rounded-md border-gray-300"
-                        />
-                        <button
-                            type="submit"
-                            class="hover:bg-blue-500 hover:text-white duration-300 px-2 mr-2 w-24 rounded-md"
-                        >
-                            更新
-                        </button>
-                    </form>
-                    <button
-                        @click="deleteItem(item.id)"
-                        class="hover:bg-red-500 hover:text-white duration-300 px-2 mr-2 h-12 w-24 rounded-md"
-                    >
-                        削除
-                    </button>
-                </div>
-            </div>
+                        <td class="border p-2 text-center">{{ item.id }}</td>
+                        <td class="border p-2">
+                            <input
+                                type="text"
+                                v-model="item.name"
+                                class="border p-1 w-full rounded-md border-gray-300"
+                            />
+                        </td>
+                        <td class="border p-2 text-center">
+                            <button
+                                @click="updateItem(item.id, item.name)"
+                                class="px-3 py-1 w-24 rounded-md bg-blue-500 text-white hover:bg-blue-600 duration-300 mr-2"
+                            >
+                                更新
+                            </button>
+                        </td>
+                        <td class="border p-2 text-center">
+                            <button
+                                @click="deleteItem(item.id)"
+                                class="px-3 py-1 w-24 rounded-md bg-red-500 text-white hover:bg-red-600 duration-300"
+                            >
+                                削除
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </template>
