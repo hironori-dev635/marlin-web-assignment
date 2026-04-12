@@ -1,0 +1,347 @@
+<template>
+    <div class="flex">
+        <div class="mt-[30px] px-[10px]">
+            <div v-for="tl in timeLavel" :key="tl" class="h-[120px] flex justify-center items-center last:h-[90px]"><p>{{ tl }}</p></div>
+        </div>
+        <div class="day-grid border">
+            <div
+                v-for="slot in slotCount"
+                :key="slot"
+                class="hour-cell"
+                @dblclick="createEvent(slot - 1)"
+            ></div>
+
+            <div
+                v-for="event in events"
+                :key="event.id"
+                class="event"
+                :style="{
+                    top: event.start * slotHeight + 'px',
+                    height: (event.end - event.start) * slotHeight + 'px',
+                }"
+                @mousedown="startMove($event, event)"
+                @dblclick.stop="openEditor(event)"
+            >
+                <div
+                    v-if="editingEventId === event.id"
+                    class="event-editor"
+                    @mousedown.stop
+                    @click.stop
+                    @dblclick.stop
+                >
+                    <input
+                        v-model="event.title"
+                        class="event-title-input"
+                        @blur="closeEditor"
+                        @keyup.enter="closeEditor"
+                    />
+                    <button
+                        type="button"
+                        class="delete-button"
+                        @mousedown.stop
+                        @click.stop="deleteEvent(event.id)"
+                    >
+                        ×
+                    </button>
+                </div>
+                <div v-else class="event-title">{{ event.title }}</div>
+                <div
+                    class="resize-handle"
+                    @mousedown.stop="startResize($event, event)"
+                ></div>
+            </div>
+        </div>
+    </div>
+    <div>{{ events }}</div>
+    <p>isDragging{{ isDragging }}</p>
+    <p>startCell{{ startCell }}</p>
+    <p>currentCell{{ currentCell }}</p>
+</template>
+
+<script setup>
+import { ref } from "vue";
+
+const isDragging = ref(false);
+const startCell = ref(null);
+const currentCell = ref(null);
+
+const isResizing = ref(false);
+const targetEvent = ref(null);
+const startY = ref(0);
+const startEnd = ref(0);
+const isMoving = ref(false);
+const moveTargetEvent = ref(null);
+const moveStartY = ref(0);
+const moveStartStart = ref(0);
+const moveDuration = ref(0);
+const editingEventId = ref(null);
+
+const slotCount = 48;
+const slotHeight = 30;
+const minDuration = 2;
+
+const events = ref([
+    {
+        id: 1,
+        title: "予定",
+        start: 2,
+        end: 6,
+    },
+    {
+        id: 2,
+        title: "予定",
+        start: 12,
+        end: 16,
+    },
+]);
+const timeLavel = [
+    "6:00",
+    "8:00",
+    "10:00",
+    "12:00",
+    "14:00",
+    "16:00",
+    "18:00",
+    "20:00",
+    "22:00",
+    "00:00",
+    "02:00",
+    "04:00",
+];
+const formatSlotLabel = (slotIndex) => {
+    const hour = Math.floor(slotIndex / 2);
+    const minute = slotIndex % 2 === 0 ? "00" : "30";
+    return `${hour}:${minute}`;
+};
+
+const startResize = (e, event) => {
+    closeEditor();
+
+    isResizing.value = true;
+    targetEvent.value = event;
+    startY.value = e.clientY;
+    startEnd.value = event.end;
+
+    window.addEventListener("mousemove", onResize);
+    window.addEventListener("mouseup", stopResize);
+};
+
+const startMove = (e, event) => {
+    if (isResizing.value) return;
+
+    closeEditor();
+    isMoving.value = true;
+    moveTargetEvent.value = event;
+    moveStartY.value = e.clientY;
+    moveStartStart.value = event.start;
+    moveDuration.value = event.end - event.start;
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", stopMove);
+};
+
+const onResize = (e) => {
+    if (!targetEvent.value) return;
+
+    const diff = e.clientY - startY.value;
+    const movedSlots = Math.round(diff / slotHeight);
+    const newEnd = startEnd.value + movedSlots;
+    const nextEvent = events.value
+        .filter((item) => item.id !== targetEvent.value.id)
+        .filter((item) => item.start >= targetEvent.value.start)
+        .sort((a, b) => a.start - b.start)[0];
+    const maxEnd = nextEvent ? nextEvent.start : slotCount;
+
+    const minEnd = targetEvent.value.start + minDuration;
+    let finalEnd = newEnd;
+
+    if (finalEnd > maxEnd) {
+        finalEnd = maxEnd;
+    }
+
+    if (finalEnd < minEnd) {
+        finalEnd = minEnd;
+    }
+
+    targetEvent.value.end = finalEnd;
+};
+
+const onMove = (e) => {
+    if (!moveTargetEvent.value) return;
+
+    const diff = e.clientY - moveStartY.value;
+    const movedSlots = Math.round(diff / slotHeight);
+    let newStart = moveStartStart.value + movedSlots;
+    const prevEvent = events.value
+        .filter((item) => item.id !== moveTargetEvent.value.id)
+        .filter((item) => item.end <= moveStartStart.value)
+        .sort((a, b) => b.end - a.end)[0];
+    const nextEvent = events.value
+        .filter((item) => item.id !== moveTargetEvent.value.id)
+        .filter((item) => item.start >= moveStartStart.value)
+        .sort((a, b) => a.start - b.start)[0];
+    const minStart = prevEvent ? prevEvent.end : 0;
+    const maxStart = nextEvent
+        ? nextEvent.start - moveDuration.value
+        : slotCount - moveDuration.value;
+
+    if (newStart < 0) {
+        newStart = 0;
+    }
+
+    if (newStart < minStart) {
+        newStart = minStart;
+    }
+
+    if (newStart > maxStart) {
+        newStart = maxStart;
+    }
+
+    const newEnd = newStart + moveDuration.value;
+
+    moveTargetEvent.value.start = newStart;
+    moveTargetEvent.value.end = newEnd;
+};
+
+const stopResize = () => {
+    window.removeEventListener("mousemove", onResize);
+    window.removeEventListener("mouseup", stopResize);
+
+    isResizing.value = false;
+    targetEvent.value = null;
+};
+
+const stopMove = () => {
+    window.removeEventListener("mousemove", onMove);
+    window.removeEventListener("mouseup", stopMove);
+
+    isMoving.value = false;
+    moveTargetEvent.value = null;
+};
+
+const openEditor = (event) => {
+    if (isMoving.value || isResizing.value) return;
+
+    editingEventId.value = event.id;
+};
+
+const closeEditor = () => {
+    editingEventId.value = null;
+};
+
+const deleteEvent = (eventId) => {
+    events.value = events.value.filter((item) => item.id !== eventId);
+    closeEditor();
+};
+
+const getNextEventId = () => {
+    if (events.value.length === 0) return 1;
+
+    return Math.max(...events.value.map((item) => item.id)) + 1;
+};
+
+const createEvent = (startSlot) => {
+    closeEditor();
+
+    const nextEvent = events.value
+        .filter((item) => item.start >= startSlot)
+        .sort((a, b) => a.start - b.start)[0];
+    const endSlot = nextEvent
+        ? Math.min(startSlot + minDuration, nextEvent.start)
+        : startSlot + minDuration;
+
+    if (endSlot <= startSlot) return;
+
+    const overlaps = events.value.some(
+        (item) => startSlot < item.end && endSlot > item.start,
+    );
+
+    if (overlaps) return;
+
+    events.value.push({
+        id: getNextEventId(),
+        title: "新規予定",
+        start: startSlot,
+        end: endSlot,
+    });
+};
+</script>
+<style>
+.day-grid {
+    position: relative;
+    width: 550px;
+}
+
+.hour-cell {
+    box-sizing: border-box;
+    user-select: none;
+    height: 30px;
+    border-top: 1px solid #ddd;
+}
+.hour-cell:last-child {
+    border-bottom: 1px solid #ddd;
+}
+.event {
+    user-select: none;
+    position: absolute;
+    left: 20px;
+    width: 500px;
+    background: skyblue;
+}
+.resize-handle {
+    position: absolute;
+    left: 0;
+    bottom: 1px;
+    width: 100%;
+    height: 12px;
+    cursor: ns-resize;
+}
+
+.resize-handle::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 3px;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.35);
+}
+.event-title {
+    pointer-events: none;
+}
+
+.event-editor {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 8px;
+}
+
+.event-title-input {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1px solid #4a90e2;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.delete-button {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border: 1px solid #999;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+}
+</style>
+   // 👇 ここ追加
+    resolve: {
+        alias: {
+            vue: 'vue/dist/vue.esm-bundler.js',
+        },
+    },
+
+
