@@ -440,14 +440,35 @@ return new class extends Migration
         ></schedhule-test2>
 
 
-Schema::create('schedules', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('title');
-            $table->date('schedule_date');
-            $table->time('start_time');
-            $table->time('end_time');
-            $table->timestamps();
+  public function index(Request $request, User $user)
+    {
+        $selectedDate = $request->string('date')->toString() ?: now()->toDateString();
 
-            $table->index(['user_id', 'schedule_date']);
-        });
+        $events = Schedule::query()
+            ->where('user_id', $user->id)
+            ->whereDate('schedule_date', $selectedDate)
+            ->orderBy('start_time')
+            ->get()
+            ->map(function (Schedule $schedule) {
+                return [
+                    'id' => $schedule->id,
+                    'title' => $schedule->title,
+                    'start' => $this->timeToSlot($schedule->start_time),
+                    'end' => $this->timeToSlot($schedule->end_time),
+                ];
+            })
+            ->values();
+
+        return view('scheduleForm', [
+            'events' => $events,
+            'selectedDate' => $selectedDate,
+            'selectedUserId' => $user->id,
+        ]);
+    }
+
+    private function timeToSlot(string $time): int
+    {
+        [$hour, $minute] = array_map('intval', explode(':', $time));
+
+        return ($hour * 2) + intdiv($minute, 30);
+    }
