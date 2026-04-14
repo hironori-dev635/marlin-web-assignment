@@ -1,7 +1,13 @@
 <template>
     <div class="flex">
         <div class="mt-[30px] px-[10px]">
-            <div v-for="tl in timeLavel" :key="tl" class="h-[120px] flex justify-center items-center last:h-[90px]"><p>{{ tl }}</p></div>
+            <div
+                v-for="tl in timeLavel"
+                :key="tl"
+                class="h-[120px] flex justify-center items-center last:h-[90px]"
+            >
+                <p>{{ tl }}</p>
+            </div>
         </div>
         <div class="day-grid border">
             <div
@@ -30,6 +36,7 @@
                     @dblclick.stop
                 >
                     <input
+                        :ref="setEditingInputRef"
                         v-model="event.title"
                         class="event-title-input"
                         @blur="closeEditor"
@@ -38,13 +45,12 @@
                     <button
                         type="button"
                         class="delete-button"
-                        @mousedown.stop
-                        @click.stop="deleteEvent(event.id)"
+                        @mousedown.prevent.stop="deleteEvent(event.id)"
                     >
                         ×
                     </button>
                 </div>
-                <div v-else class="event-title">{{ event.title }}</div>
+                <div class="event-title">{{ event.title }}</div>
                 <div
                     class="resize-handle"
                     @mousedown.stop="startResize($event, event)"
@@ -59,7 +65,22 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { nextTick, ref } from "vue";
+
+const props = defineProps({
+    initialEvents: {
+        type: Array,
+        default: () => [],
+    },
+    selectedDate: {
+        type: String,
+        default: "",
+    },
+    selectedUserId: {
+        type: [String, Number],
+        default: null,
+    },
+});
 
 const isDragging = ref(false);
 const startCell = ref(null);
@@ -75,12 +96,12 @@ const moveStartY = ref(0);
 const moveStartStart = ref(0);
 const moveDuration = ref(0);
 const editingEventId = ref(null);
+const editingInputRef = ref(null);
 
 const slotCount = 48;
 const slotHeight = 30;
 const minDuration = 2;
-
-const events = ref([
+const defaultEvents = [
     {
         id: 1,
         title: "予定",
@@ -93,7 +114,13 @@ const events = ref([
         start: 12,
         end: 16,
     },
-]);
+];
+
+const events = ref(
+    (props.initialEvents.length ? props.initialEvents : defaultEvents).map(
+        (event) => ({ ...event }),
+    ),
+);
 const timeLavel = [
     "6:00",
     "8:00",
@@ -170,30 +197,40 @@ const onMove = (e) => {
     if (!moveTargetEvent.value) return;
 
     const diff = e.clientY - moveStartY.value;
-    const movedSlots = Math.round(diff / slotHeight);
-    let newStart = moveStartStart.value + movedSlots;
+    const movedSlots = Math.round(diff / slotHeight); //四捨五入 Math.round(20.49); // 20
+    let provisionalNewStart = moveStartStart.value + movedSlots; //フィルタされていない新しい開始時間のインデックス
+
+    //前の予定をオブジェクトで取得
     const prevEvent = events.value
-        .filter((item) => item.id !== moveTargetEvent.value.id)
-        .filter((item) => item.end <= moveStartStart.value)
-        .sort((a, b) => b.end - a.end)[0];
+        .filter((item) => item.id !== moveTargetEvent.value.id) //操作中のID以外を抽出
+        .filter((item) => item.end <= moveStartStart.value) //「操作開始時点の予定より前で終わっている予定」だけ残します。
+        .sort((a, b) => b.end - a.end)[0]; //降順（大きい順）の最初のインデックス
+
+    //後ろの予定をオブジェクトで取得
     const nextEvent = events.value
         .filter((item) => item.id !== moveTargetEvent.value.id)
         .filter((item) => item.start >= moveStartStart.value)
-        .sort((a, b) => a.start - b.start)[0];
+        .sort((a, b) => a.start - b.start)[0]; //昇順（小さい順）の最初のインデックス
+
     const minStart = prevEvent ? prevEvent.end : 0;
+    //prevEvent(前の予定) がある → その予定の end
+    //prevEvent(前の予定) がない (undefined) → 0
+
     const maxStart = nextEvent
         ? nextEvent.start - moveDuration.value
         : slotCount - moveDuration.value;
-
-    if (newStart < 0) {
+    //nextEvent(後ろの予定) がある　→　後ろの開始インデックス - 幅で選択中の予定の開始位置の最大を出す
+    //nextEvent(後ろの予定) がない　→　時間枠数 - 幅で選択中の予定の開始位置の最大を出す
+    let newStart = provisionalNewStart;
+    if (provisionalNewStart < 0) {
         newStart = 0;
     }
 
-    if (newStart < minStart) {
+    if (provisionalNewStart < minStart) {
         newStart = minStart;
     }
 
-    if (newStart > maxStart) {
+    if (provisionalNewStart > maxStart) {
         newStart = maxStart;
     }
 
@@ -223,6 +260,14 @@ const openEditor = (event) => {
     if (isMoving.value || isResizing.value) return;
 
     editingEventId.value = event.id;
+    nextTick(() => {
+        editingInputRef.value?.focus();
+        //editingInputRef.value?.select?.();
+    });
+};
+
+const setEditingInputRef = (element) => {
+    editingInputRef.value = element;
 };
 
 const closeEditor = () => {
@@ -287,6 +332,7 @@ const createEvent = (startSlot) => {
     left: 20px;
     width: 500px;
     background: skyblue;
+    overflow: visible;
 }
 .resize-handle {
     position: absolute;
@@ -313,14 +359,22 @@ const createEvent = (startSlot) => {
 }
 
 .event-editor {
+    position: absolute;
+    top: -42px;
+    right: 0;
+    z-index: 10;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 8px;
-    margin: 8px;
+    padding: 8px;
+    border: 1px solid #999;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .event-title-input {
-    width: 100%;
+    width: 180px;
     padding: 4px 6px;
     border: 1px solid #4a90e2;
     border-radius: 4px;
@@ -336,12 +390,64 @@ const createEvent = (startSlot) => {
     background: #fff;
     cursor: pointer;
 }
+
+.event-title-input:focus {
+    border: 2px solid #ff9900;
+    /* z-index: 10; */
+    outline: 0;
+}
 </style>
-   // 👇 ここ追加
-    resolve: {
-        alias: {
-            vue: 'vue/dist/vue.esm-bundler.js',
-        },
-    },
 
 
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('schedules', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('title');
+            $table->date('schedule_date');
+            $table->time('start_time');
+            $table->time('end_time');
+            $table->timestamps();
+
+            $table->index(['user_id', 'schedule_date']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('schedules');
+    }
+};
+ <schedhule-test2
+            :initial-events='@json($events ?? [])'
+            selected-date='{{ $selectedDate ?? now()->toDateString() }}'
+            selected-user-id='{{ $selectedUserId ?? "" }}'
+        ></schedhule-test2>
+
+
+Schema::create('schedules', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('title');
+            $table->date('schedule_date');
+            $table->time('start_time');
+            $table->time('end_time');
+            $table->timestamps();
+
+            $table->index(['user_id', 'schedule_date']);
+        });
