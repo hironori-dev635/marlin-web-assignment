@@ -472,3 +472,139 @@ return new class extends Migration
 
         return ($hour * 2) + intdiv($minute, 30);
     }
+
+
+
+<?php
+
+namespace App\Console\Commands;
+
+use Illuminate\Console\Command;
+use App\Models\Half;
+use App\Models\WeeklySlot;
+
+
+class ConvertHalves extends Command
+{
+    /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = 'convert:halves';
+
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = 'halves を weekly_slots に変換する';
+
+    /**
+     * Execute the console command.
+     */
+    public function handle()
+    {
+        $days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+        $weeklyIds = Half::select('weekly_id')->distinct()->pluck('weekly_id');
+
+
+        foreach ($weeklyIds as $weeklyId) {
+            // $weeklyId = 1;
+            $halves = Half::where('weekly_id', $weeklyId)
+                ->orderBy('halfOrder')
+                ->get();
+
+            $halfArray = [];
+
+
+            foreach ($halves as $hIndex => $half) {
+                $halfArray[$hIndex]['timeIndexHalf'] = $half->halfOrder;
+
+                foreach ($days as $dIndex => $day) {
+                    $halfArray[$hIndex]['dayOfWeekTitle'][$dIndex] = $half->$day;
+                }
+            }
+
+            $weeklyArray = array_fill(0, 37, array_fill(0, 7, null));
+
+            foreach ($halfArray as $row) {
+                $index = $row['timeIndexHalf'];
+                $weeklyArray[$index] = $row['dayOfWeekTitle'];
+            }
+
+            //dd($weeklyArray);
+
+
+            $slot = [];
+
+            for ($w = 0; $w < 7; $w++) {
+
+                $startIndex = 0;
+                $endIndex = 0;
+
+
+                for ($t = 0; $t < 37; $t++) {
+
+                    $currentTitle = $weeklyArray[$t][$w];
+
+                    if ($currentTitle === null) {
+                        $startIndex = $t + 1;
+                        $endIndex = $t + 1;
+                        continue;
+                    }
+
+                    if ($t == 36) {
+                        // 最後
+                        $slot = [
+                            'weekly_id' => $weeklyId,
+                            'title' => $currentTitle,
+                            'day_of_week' => $w,
+                            'start_index' => $startIndex,
+                            'end_index' => $endIndex,
+                        ];
+                        //dump($slot);
+                        WeeklySlot::create($slot);
+                        break;
+                    }
+
+                    $nextTitle = $weeklyArray[$t + 1][$w];
+
+                    // 予定が連続してる場合
+                    if ($currentTitle === $nextTitle) {
+                        $endIndex = $t + 1;
+                        continue;
+                    }
+
+                    // 途切れた場合
+                    if ($currentTitle !== $nextTitle) {
+
+                        if ($currentTitle !== null) {
+                            $slot = [
+                                'weekly_id' => $weeklyId,
+                                'title' => $currentTitle,
+                                'day_of_week' => $w,
+                                'start_index' => $startIndex,
+                                'end_index' => $endIndex,
+                            ];
+                            //dump($slot);
+
+                            WeeklySlot::create($slot);
+                        }
+
+                        $startIndex = $t + 1;
+                        $endIndex = $t + 1;
+                    }
+                }
+            }
+        }
+
+
+
+       $this->info('変換完了');
+    }
+}
+
+
