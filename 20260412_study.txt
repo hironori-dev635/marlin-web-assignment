@@ -474,7 +474,6 @@ return new class extends Migration
     }
 
 
-
 <?php
 
 namespace App\Console\Commands;
@@ -512,7 +511,7 @@ class ConvertHalves extends Command
 
 
         foreach ($weeklyIds as $weeklyId) {
-            // $weeklyId = 1;
+            //$weeklyId = 1;
             $halves = Half::where('weekly_id', $weeklyId)
                 ->orderBy('halfOrder')
                 ->get();
@@ -528,15 +527,68 @@ class ConvertHalves extends Command
                 }
             }
 
-            $weeklyArray = array_fill(0, 37, array_fill(0, 7, null));
+            $weeklyArrayHalf = array_fill(0, 48, array_fill(0, 7, null));
+
+            // foreach ($halfArray as $row) {
+            //     $halfIndex = $row['timeIndexHalf'];
+            //     if ($halfIndex >= 35) {
+            //         $newIndex = $halfIndex + 13 - 48;
+            //     } else {
+            //         $newIndex = $halfIndex + 13;
+            //     }
+            //     $weeklyArray[$newIndex] = $row['dayOfWeekTitle'];
+            // }
 
             foreach ($halfArray as $row) {
                 $index = $row['timeIndexHalf'];
-                $weeklyArray[$index] = $row['dayOfWeekTitle'];
+                $weeklyArrayHalf[$index] = $row['dayOfWeekTitle'];
             }
+            $startTitle = array_fill(0, 7, null);
+            $startTitleIndex = array_fill(0, 7, null);
+            $endTitle = array_fill(0, 7, null);
+            $endTitleIndex = array_fill(0, 7, null);
+            for ($d = 0; $d < 7; $d++) {
 
-            //dd($weeklyArray);
+                for ($i = 0; $i < 11; $i++) {
+                    if ($weeklyArrayHalf[$i][$d] !== null) {
+                        $startTitle[$d] = $weeklyArrayHalf[$i][$d];
+                        $startTitleIndex[$d] = $i;
+                        break;
+                    }
+                }
 
+                for ($i = 36; $i > 23; $i--) {
+                    if ($weeklyArrayHalf[$i][$d] !== null) {
+                        $endTitle[$d] = $weeklyArrayHalf[$i][$d];
+                        $endTitleIndex[$d] = $i;
+                        break;
+                    }
+                }
+            }
+            // dump("$startTitle[0]   $startTitleIndex[0]   $endTitle[0] $endTitleIndex[0] ");
+            for ($d = 0; $d < 7; $d++) {
+                if ($startTitle[$d] === $endTitle[$d]) {
+                    for ($i = 0; $i <  $startTitleIndex[$d]; $i++) {
+                        $weeklyArrayHalf[$i][$d] = $startTitle[$d];
+                    }
+                    for ($i = 47; $i > $endTitleIndex[$d]; $i--) {
+                        $weeklyArrayHalf[$i][$d] = $startTitle[$d];
+                    }
+                }
+            }
+            //dd($weeklyArrayHalf);
+            $weeklyArray = array_fill(0, 48, array_fill(0, 7, null));
+
+            foreach ($weeklyArrayHalf as  $i => $row) {
+
+                if ($i + 13 >= 48) {
+                    $newIndex = $i + 13 - 48;
+                } else {
+                    $newIndex = $i + 13;
+                }
+                $weeklyArray[$newIndex] = $row;
+            }
+            dd($weeklyArray);
 
             $slot = [];
 
@@ -603,8 +655,10 @@ class ConvertHalves extends Command
 
 
 
-       $this->info('変換完了');
+        $this->info('変換完了');
     }
 }
+
+
 
 
