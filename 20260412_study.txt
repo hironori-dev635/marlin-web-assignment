@@ -1,663 +1,112 @@
-<template>
-    <div class="flex">
-        <div class="mt-[30px] px-[10px]">
-            <div
-                v-for="tl in timeLavel"
-                :key="tl"
-                class="h-[120px] flex justify-center items-center last:h-[90px]"
-            >
-                <p>{{ tl }}</p>
-            </div>
+<x-app-layout>
+    {{--
+        【このブロック（Alpine x-data）がやっていること】
+
+        1. なぜ数値が必要か
+           CSS の position:sticky は「張り付く位置」を top で決める。
+           その top は「スクロール領域の上端からの距離」であり、
+           画面上でナビや緑帯の“すぐ下”に黄パネルを置きたいときは、
+           （ナビの実高さ）+（緑帯の実高さ）を px で指定するのがわかりやすい。
+
+        2. navHeightPx / topPx の役割
+           - navHeightPx … layouts/navigation の <nav> の offsetHeight（sticky の緑帯の top にも使う）
+           - topPx       … 黄パネル用。ナビ + 緑帯の合計高さ = sticky で「緑の真下」に黄を止めるための値
+
+        3. ResizeObserver を使う理由
+           ナビの高さ（メニュー折り返し・フォント）や緑帯の文案変更で高さが変わっても、
+           再計算しないと top がズレる。Mutation のたびに測り直すのが ResizeObserver。
+           ※ ウィンドウ幅だけなら resize イベントでも足りることはあるが、要素“内部”の高さ変化は ResizeObserver が向いている。
+
+        4. init() と $nextTick
+           Alpine が x-ref を束ね終わった後に計測したいので $nextTick で 1 ティック遅らせる。
+           （ref がまだ取れないタイミングでの offsetHeight 0 回避）
+
+        5. _ro を disconnect している理由
+           Livewire 等でパーシャル再描画すると init が再度走ることがあり、そのたびに observe が二重になると
+           コールバックが複数回登録される。再セットアップ前に古い ResizeObserver を切る。
+
+        6. Alpine.data を別ファイルにしない理由
+           alpine:init の登録順と、この Blade が読み込まれる順で「未定義」になり得るため、
+           x-data のオブジェクトに init() を直書きして読み込み順に依存しないようにしている。
+
+        【対応するコード位置の目安】
+           - topPx / navHeightPx / _ro … 下の x-data 直後のプロパティ
+           - init / $nextTick … DOM 確定後に計測するための待ち
+           - recalc … nav と緑帯の offsetHeight を読む本体
+           - ResizeObserver … nav・緑の「高さ変化」を監視
+           - window.resize … ウィンドウ幅変更でナビが折り返すケースの保険（RO と併用）
+    --}}
+    <div
+        class="space-y-0"
+        x-data="{
+            topPx: 0,
+            navHeightPx: 0,
+            _ro: null,
+            init() {
+                /* x-ref 確定後に offsetHeight を取る（上の Blade コメント 4） */
+                this.$nextTick(() => {
+                    /* ナビ: layouts/navigation の先頭 nav。複数あるサイトでは querySelector を絞る */
+                    const nav = document.querySelector('nav');
+                    /* 緑帯: このコンポーネント内の x-ref（Alpine が束ねた後に参照可能） */
+                    const green = this.$refs.greenStrip;
+
+                    const recalc = () => {
+                        const navH = nav ? nav.offsetHeight : 0;
+                        const greenH = green ? green.offsetHeight : 0;
+                        this.navHeightPx = Math.round(navH);
+                        /* 黄パネル sticky の top = ナビ下端までの距離 + 緑帯の高さ（＝緑の直下に黄を合わせる） */
+                        this.topPx = this.navHeightPx + Math.round(greenH);
+                    };
+
+                    recalc();
+
+                    if (this._ro) {
+                        this._ro.disconnect();
+                    }
+
+                    /* 高さが変わったら recalc。disconnect は二重 observe 防止（上の Blade コメント 5 参照） */
+                    this._ro = new ResizeObserver(() => recalc());
+                    if (nav) {
+                        this._ro.observe(nav);
+                    }
+                    if (green) {
+                        this._ro.observe(green);
+                    }
+
+                    /* 幅変更でナビが折り返すときの再計算（RO と併用。Blade コメント 3 の補足） */
+                    window.addEventListener('resize', recalc);
+                });
+            },
+        }"
+    >
+        <div
+            x-ref="greenStrip"
+            class="sticky z-40 border-b border-green-200 bg-green-100 px-4 py-3 shadow-sm"
+            :style="`top: ${navHeightPx}px`"
+        >
+            緑の固定帯（高さが変わっても ResizeObserver で追従）
         </div>
-        <div class="day-grid border">
-            <div
-                v-for="slot in slotCount"
-                :key="slot"
-                class="hour-cell"
-                @dblclick="createEvent(slot - 1)"
-            ></div>
+<div class=" h-[200px] bg-pink-100"> ここにはスクロール時に消えてもいいやつが入る</div>
+        <div class="flex justify-center gap-2 bg-red-100">
+            <div class="h-[1500px] w-[1200px] bg-blue-100">
+                スケジュールグリッドが中に入る
+            </div>
 
             <div
-                v-for="event in events"
-                :key="event.id"
-                class="event"
-                :style="{
-                    top: event.start * slotHeight + 'px',
-                    height: (event.end - event.start) * slotHeight + 'px',
-                }"
-                @mousedown="startMove($event, event)"
-                @dblclick.stop="openEditor(event)"
+                class="w-[300px] self-start bg-yellow-100 shadow"
+                :style="`position: sticky; top: ${topPx}px;`"
             >
-                <div
-                    v-if="editingEventId === event.id"
-                    class="event-editor"
-                    @mousedown.stop
-                    @click.stop
-                    @dblclick.stop
-                >
-                    <input
-                        :ref="setEditingInputRef"
-                        v-model="event.title"
-                        class="event-title-input"
-                        @blur="closeEditor"
-                        @keyup.enter="closeEditor"
-                    />
-                    <button
-                        type="button"
-                        class="delete-button"
-                        @mousedown.prevent.stop="deleteEvent(event.id)"
-                    >
-                        ×
-                    </button>
+                <div class="p-4">
+                    <p class="text-sm font-medium text-gray-700">操作パネル</p>
+                    <p class="mt-2 text-xs text-gray-500">
+                        sticky の top = ナビ + 緑帯（<span x-text="topPx"></span> px）
+                    </p>
                 </div>
-                <div class="event-title">{{ event.title }}</div>
-                <div
-                    class="resize-handle"
-                    @mousedown.stop="startResize($event, event)"
-                ></div>
             </div>
         </div>
     </div>
-    <div>{{ events }}</div>
-    <p>isDragging{{ isDragging }}</p>
-    <p>startCell{{ startCell }}</p>
-    <p>currentCell{{ currentCell }}</p>
-</template>
+</x-app-layout>
 
-<script setup>
-import { nextTick, ref } from "vue";
-
-const props = defineProps({
-    initialEvents: {
-        type: Array,
-        default: () => [],
-    },
-    selectedDate: {
-        type: String,
-        default: "",
-    },
-    selectedUserId: {
-        type: [String, Number],
-        default: null,
-    },
-});
-
-const isDragging = ref(false);
-const startCell = ref(null);
-const currentCell = ref(null);
-
-const isResizing = ref(false);
-const targetEvent = ref(null);
-const startY = ref(0);
-const startEnd = ref(0);
-const isMoving = ref(false);
-const moveTargetEvent = ref(null);
-const moveStartY = ref(0);
-const moveStartStart = ref(0);
-const moveDuration = ref(0);
-const editingEventId = ref(null);
-const editingInputRef = ref(null);
-
-const slotCount = 48;
-const slotHeight = 30;
-const minDuration = 2;
-const defaultEvents = [
-    {
-        id: 1,
-        title: "予定",
-        start: 2,
-        end: 6,
-    },
-    {
-        id: 2,
-        title: "予定",
-        start: 12,
-        end: 16,
-    },
-];
-
-const events = ref(
-    (props.initialEvents.length ? props.initialEvents : defaultEvents).map(
-        (event) => ({ ...event }),
-    ),
-);
-const timeLavel = [
-    "6:00",
-    "8:00",
-    "10:00",
-    "12:00",
-    "14:00",
-    "16:00",
-    "18:00",
-    "20:00",
-    "22:00",
-    "00:00",
-    "02:00",
-    "04:00",
-];
-const formatSlotLabel = (slotIndex) => {
-    const hour = Math.floor(slotIndex / 2);
-    const minute = slotIndex % 2 === 0 ? "00" : "30";
-    return `${hour}:${minute}`;
-};
-
-const startResize = (e, event) => {
-    closeEditor();
-
-    isResizing.value = true;
-    targetEvent.value = event;
-    startY.value = e.clientY;
-    startEnd.value = event.end;
-
-    window.addEventListener("mousemove", onResize);
-    window.addEventListener("mouseup", stopResize);
-};
-
-const startMove = (e, event) => {
-    if (isResizing.value) return;
-
-    closeEditor();
-    isMoving.value = true;
-    moveTargetEvent.value = event;
-    moveStartY.value = e.clientY;
-    moveStartStart.value = event.start;
-    moveDuration.value = event.end - event.start;
-
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", stopMove);
-};
-
-const onResize = (e) => {
-    if (!targetEvent.value) return;
-
-    const diff = e.clientY - startY.value;
-    const movedSlots = Math.round(diff / slotHeight);
-    const newEnd = startEnd.value + movedSlots;
-    const nextEvent = events.value
-        .filter((item) => item.id !== targetEvent.value.id)
-        .filter((item) => item.start >= targetEvent.value.start)
-        .sort((a, b) => a.start - b.start)[0];
-    const maxEnd = nextEvent ? nextEvent.start : slotCount;
-
-    const minEnd = targetEvent.value.start + minDuration;
-    let finalEnd = newEnd;
-
-    if (finalEnd > maxEnd) {
-        finalEnd = maxEnd;
-    }
-
-    if (finalEnd < minEnd) {
-        finalEnd = minEnd;
-    }
-
-    targetEvent.value.end = finalEnd;
-};
-
-const onMove = (e) => {
-    if (!moveTargetEvent.value) return;
-
-    const diff = e.clientY - moveStartY.value;
-    const movedSlots = Math.round(diff / slotHeight); //四捨五入 Math.round(20.49); // 20
-    let provisionalNewStart = moveStartStart.value + movedSlots; //フィルタされていない新しい開始時間のインデックス
-
-    //前の予定をオブジェクトで取得
-    const prevEvent = events.value
-        .filter((item) => item.id !== moveTargetEvent.value.id) //操作中のID以外を抽出
-        .filter((item) => item.end <= moveStartStart.value) //「操作開始時点の予定より前で終わっている予定」だけ残します。
-        .sort((a, b) => b.end - a.end)[0]; //降順（大きい順）の最初のインデックス
-
-    //後ろの予定をオブジェクトで取得
-    const nextEvent = events.value
-        .filter((item) => item.id !== moveTargetEvent.value.id)
-        .filter((item) => item.start >= moveStartStart.value)
-        .sort((a, b) => a.start - b.start)[0]; //昇順（小さい順）の最初のインデックス
-
-    const minStart = prevEvent ? prevEvent.end : 0;
-    //prevEvent(前の予定) がある → その予定の end
-    //prevEvent(前の予定) がない (undefined) → 0
-
-    const maxStart = nextEvent
-        ? nextEvent.start - moveDuration.value
-        : slotCount - moveDuration.value;
-    //nextEvent(後ろの予定) がある　→　後ろの開始インデックス - 幅で選択中の予定の開始位置の最大を出す
-    //nextEvent(後ろの予定) がない　→　時間枠数 - 幅で選択中の予定の開始位置の最大を出す
-    let newStart = provisionalNewStart;
-    if (provisionalNewStart < 0) {
-        newStart = 0;
-    }
-
-    if (provisionalNewStart < minStart) {
-        newStart = minStart;
-    }
-
-    if (provisionalNewStart > maxStart) {
-        newStart = maxStart;
-    }
-
-    const newEnd = newStart + moveDuration.value;
-
-    moveTargetEvent.value.start = newStart;
-    moveTargetEvent.value.end = newEnd;
-};
-
-const stopResize = () => {
-    window.removeEventListener("mousemove", onResize);
-    window.removeEventListener("mouseup", stopResize);
-
-    isResizing.value = false;
-    targetEvent.value = null;
-};
-
-const stopMove = () => {
-    window.removeEventListener("mousemove", onMove);
-    window.removeEventListener("mouseup", stopMove);
-
-    isMoving.value = false;
-    moveTargetEvent.value = null;
-};
-
-const openEditor = (event) => {
-    if (isMoving.value || isResizing.value) return;
-
-    editingEventId.value = event.id;
-    nextTick(() => {
-        editingInputRef.value?.focus();
-        //editingInputRef.value?.select?.();
-    });
-};
-
-const setEditingInputRef = (element) => {
-    editingInputRef.value = element;
-};
-
-const closeEditor = () => {
-    editingEventId.value = null;
-};
-
-const deleteEvent = (eventId) => {
-    events.value = events.value.filter((item) => item.id !== eventId);
-    closeEditor();
-};
-
-const getNextEventId = () => {
-    if (events.value.length === 0) return 1;
-
-    return Math.max(...events.value.map((item) => item.id)) + 1;
-};
-
-const createEvent = (startSlot) => {
-    closeEditor();
-
-    const nextEvent = events.value
-        .filter((item) => item.start >= startSlot)
-        .sort((a, b) => a.start - b.start)[0];
-    const endSlot = nextEvent
-        ? Math.min(startSlot + minDuration, nextEvent.start)
-        : startSlot + minDuration;
-
-    if (endSlot <= startSlot) return;
-
-    const overlaps = events.value.some(
-        (item) => startSlot < item.end && endSlot > item.start,
-    );
-
-    if (overlaps) return;
-
-    events.value.push({
-        id: getNextEventId(),
-        title: "新規予定",
-        start: startSlot,
-        end: endSlot,
-    });
-};
-</script>
-<style>
-.day-grid {
-    position: relative;
-    width: 550px;
-}
-
-.hour-cell {
-    box-sizing: border-box;
-    user-select: none;
-    height: 30px;
-    border-top: 1px solid #ddd;
-}
-.hour-cell:last-child {
-    border-bottom: 1px solid #ddd;
-}
-.event {
-    user-select: none;
-    position: absolute;
-    left: 20px;
-    width: 500px;
-    background: skyblue;
-    overflow: visible;
-}
-.resize-handle {
-    position: absolute;
-    left: 0;
-    bottom: 1px;
-    width: 100%;
-    height: 12px;
-    cursor: ns-resize;
-}
-
-.resize-handle::after {
-    content: "";
-    position: absolute;
-    left: 50%;
-    bottom: 3px;
-    transform: translateX(-50%);
-    width: 36px;
-    height: 4px;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.35);
-}
-.event-title {
-    pointer-events: none;
-}
-
-.event-editor {
-    position: absolute;
-    top: -42px;
-    right: 0;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px;
-    border: 1px solid #999;
-    border-radius: 6px;
-    background: #fff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.event-title-input {
-    width: 180px;
-    padding: 4px 6px;
-    border: 1px solid #4a90e2;
-    border-radius: 4px;
-    box-sizing: border-box;
-}
-
-.delete-button {
-    width: 28px;
-    height: 28px;
-    flex: 0 0 28px;
-    border: 1px solid #999;
-    border-radius: 4px;
-    background: #fff;
-    cursor: pointer;
-}
-
-.event-title-input:focus {
-    border: 2px solid #ff9900;
-    /* z-index: 10; */
-    outline: 0;
-}
-</style>
-
-
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::create('schedules', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('title');
-            $table->date('schedule_date');
-            $table->time('start_time');
-            $table->time('end_time');
-            $table->timestamps();
-
-            $table->index(['user_id', 'schedule_date']);
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::dropIfExists('schedules');
-    }
-};
- <schedhule-test2
-            :initial-events='@json($events ?? [])'
-            selected-date='{{ $selectedDate ?? now()->toDateString() }}'
-            selected-user-id='{{ $selectedUserId ?? "" }}'
-        ></schedhule-test2>
-
-
-  public function index(Request $request, User $user)
-    {
-        $selectedDate = $request->string('date')->toString() ?: now()->toDateString();
-
-        $events = Schedule::query()
-            ->where('user_id', $user->id)
-            ->whereDate('schedule_date', $selectedDate)
-            ->orderBy('start_time')
-            ->get()
-            ->map(function (Schedule $schedule) {
-                return [
-                    'id' => $schedule->id,
-                    'title' => $schedule->title,
-                    'start' => $this->timeToSlot($schedule->start_time),
-                    'end' => $this->timeToSlot($schedule->end_time),
-                ];
-            })
-            ->values();
-
-        return view('scheduleForm', [
-            'events' => $events,
-            'selectedDate' => $selectedDate,
-            'selectedUserId' => $user->id,
-        ]);
-    }
-
-    private function timeToSlot(string $time): int
-    {
-        [$hour, $minute] = array_map('intval', explode(':', $time));
-
-        return ($hour * 2) + intdiv($minute, 30);
-    }
-
-
-<?php
-
-namespace App\Console\Commands;
-
-use Illuminate\Console\Command;
-use App\Models\Half;
-use App\Models\WeeklySlot;
-
-
-class ConvertHalves extends Command
-{
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
-    protected $signature = 'convert:halves';
-
-
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'halves を weekly_slots に変換する';
-
-    /**
-     * Execute the console command.
-     */
-    public function handle()
-    {
-        $days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-
-        $weeklyIds = Half::select('weekly_id')->distinct()->pluck('weekly_id');
-
-
-        foreach ($weeklyIds as $weeklyId) {
-            //$weeklyId = 1;
-            $halves = Half::where('weekly_id', $weeklyId)
-                ->orderBy('halfOrder')
-                ->get();
-
-            $halfArray = [];
-
-
-            foreach ($halves as $hIndex => $half) {
-                $halfArray[$hIndex]['timeIndexHalf'] = $half->halfOrder;
-
-                foreach ($days as $dIndex => $day) {
-                    $halfArray[$hIndex]['dayOfWeekTitle'][$dIndex] = $half->$day;
-                }
-            }
-
-            $weeklyArrayHalf = array_fill(0, 48, array_fill(0, 7, null));
-
-            // foreach ($halfArray as $row) {
-            //     $halfIndex = $row['timeIndexHalf'];
-            //     if ($halfIndex >= 35) {
-            //         $newIndex = $halfIndex + 13 - 48;
-            //     } else {
-            //         $newIndex = $halfIndex + 13;
-            //     }
-            //     $weeklyArray[$newIndex] = $row['dayOfWeekTitle'];
-            // }
-
-            foreach ($halfArray as $row) {
-                $index = $row['timeIndexHalf'];
-                $weeklyArrayHalf[$index] = $row['dayOfWeekTitle'];
-            }
-            $startTitle = array_fill(0, 7, null);
-            $startTitleIndex = array_fill(0, 7, null);
-            $endTitle = array_fill(0, 7, null);
-            $endTitleIndex = array_fill(0, 7, null);
-            for ($d = 0; $d < 7; $d++) {
-
-                for ($i = 0; $i < 11; $i++) {
-                    if ($weeklyArrayHalf[$i][$d] !== null) {
-                        $startTitle[$d] = $weeklyArrayHalf[$i][$d];
-                        $startTitleIndex[$d] = $i;
-                        break;
-                    }
-                }
-
-                for ($i = 36; $i > 23; $i--) {
-                    if ($weeklyArrayHalf[$i][$d] !== null) {
-                        $endTitle[$d] = $weeklyArrayHalf[$i][$d];
-                        $endTitleIndex[$d] = $i;
-                        break;
-                    }
-                }
-            }
-            // dump("$startTitle[0]   $startTitleIndex[0]   $endTitle[0] $endTitleIndex[0] ");
-            for ($d = 0; $d < 7; $d++) {
-                if ($startTitle[$d] === $endTitle[$d]) {
-                    for ($i = 0; $i <  $startTitleIndex[$d]; $i++) {
-                        $weeklyArrayHalf[$i][$d] = $startTitle[$d];
-                    }
-                    for ($i = 47; $i > $endTitleIndex[$d]; $i--) {
-                        $weeklyArrayHalf[$i][$d] = $startTitle[$d];
-                    }
-                }
-            }
-            //dd($weeklyArrayHalf);
-            $weeklyArray = array_fill(0, 48, array_fill(0, 7, null));
-
-            foreach ($weeklyArrayHalf as  $i => $row) {
-
-                if ($i + 13 >= 48) {
-                    $newIndex = $i + 13 - 48;
-                } else {
-                    $newIndex = $i + 13;
-                }
-                $weeklyArray[$newIndex] = $row;
-            }
-            dd($weeklyArray);
-
-            $slot = [];
-
-            for ($w = 0; $w < 7; $w++) {
-
-                $startIndex = 0;
-                $endIndex = 0;
-
-
-                for ($t = 0; $t < 37; $t++) {
-
-                    $currentTitle = $weeklyArray[$t][$w];
-
-                    if ($currentTitle === null) {
-                        $startIndex = $t + 1;
-                        $endIndex = $t + 1;
-                        continue;
-                    }
-
-                    if ($t == 36) {
-                        // 最後
-                        $slot = [
-                            'weekly_id' => $weeklyId,
-                            'title' => $currentTitle,
-                            'day_of_week' => $w,
-                            'start_index' => $startIndex,
-                            'end_index' => $endIndex,
-                        ];
-                        //dump($slot);
-                        WeeklySlot::create($slot);
-                        break;
-                    }
-
-                    $nextTitle = $weeklyArray[$t + 1][$w];
-
-                    // 予定が連続してる場合
-                    if ($currentTitle === $nextTitle) {
-                        $endIndex = $t + 1;
-                        continue;
-                    }
-
-                    // 途切れた場合
-                    if ($currentTitle !== $nextTitle) {
-
-                        if ($currentTitle !== null) {
-                            $slot = [
-                                'weekly_id' => $weeklyId,
-                                'title' => $currentTitle,
-                                'day_of_week' => $w,
-                                'start_index' => $startIndex,
-                                'end_index' => $endIndex,
-                            ];
-                            //dump($slot);
-
-                            WeeklySlot::create($slot);
-                        }
-
-                        $startIndex = $t + 1;
-                        $endIndex = $t + 1;
-                    }
-                }
-            }
-        }
-
-
-
-        $this->info('変換完了');
-    }
-}
 
 
 
