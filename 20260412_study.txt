@@ -1,180 +1,242 @@
-<x-app-layout>
-    {{--
-        【このブロック（Alpine x-data）がやっていること】
+<script setup>
+import { ref } from "vue";
 
-        1. なぜ数値が必要か
-           CSS の position:sticky は「張り付く位置」を top で決める。
-           その top は「スクロール領域の上端からの距離」であり、
-           画面上でナビや緑帯の“すぐ下”に黄パネルを置きたいときは、
-           （ナビの実高さ）+（緑帯の実高さ）を px で指定するのがわかりやすい。
+const ROW_COUNT = 5;
+const ROW_LABEL_WIDTH = "2.5rem";
 
-        2. navHeightPx / topPx の役割
-           - navHeightPx … layouts/navigation の <nav> の offsetHeight（sticky の緑帯の top にも使う）
-           - topPx       … 黄パネル用。ナビ + 緑帯の合計高さ = sticky で「緑の真下」に黄を止めるための値
+// 列定義（上から順に表示 / expanded: true = 開いている）
+const columnDatas = ref([
+    {
+        key: "issue",
+        longLabel: "解決すべき課題",
+        shortLabel: "課題",
+        collapsedWidth: "1.75rem",
+        expanded: true,
+    },
+    {
+        key: "period",
+        longLabel: "計画における期間aaaaaaaaaaaaaaaa",
+        shortLabel: "期間",
+        collapsedWidth: "1.75rem",
+        expanded: true,
+    },
+    {
+        key: "goal",
+        longLabel: "達成したい目標",
+        shortLabel: "目標",
+        collapsedWidth: "1.75rem",
+        expanded: true,
+    },
+    {
+        key: "support",
+        longLabel: "支援の内容",
+        shortLabel: "支援",
+        collapsedWidth: "1.75rem",
+        expanded: true,
+    },
+    {
+        key: "method",
+        longLabel: "支援の方法",
+        shortLabel: "方法",
+        collapsedWidth: "1.75rem",
+        expanded: true,
+    },
+    {
+        key: "frequency",
+        longLabel: "支援の頻度",
+        shortLabel: "頻度",
+        collapsedWidth: "1.75rem",
+        expanded: true,
+    },
+    {
+        key: "evaluation",
+        longLabel: "評価の方法",
+        shortLabel: "評価",
+        collapsedWidth: "1.75rem",
+        expanded: true,
+    },
+    {
+        key: "remark",
+        longLabel: "備考・特記事項",
+        shortLabel: "備考",
+        collapsedWidth: "2rem",
+        expanded: true,
+    },
+]);
 
-        3. ResizeObserver を使う理由
-           ナビの高さ（メニュー折り返し・フォント）や緑帯の文案変更で高さが変わっても、
-           再計算しないと top がズレる。Mutation のたびに測り直すのが ResizeObserver。
-           ※ ウィンドウ幅だけなら resize イベントでも足りることはあるが、要素“内部”の高さ変化は ResizeObserver が向いている。
+const COL_COUNT = columnDatas.value.length;
 
-        4. init() と $nextTick
-           Alpine が x-ref を束ね終わった後に計測したいので $nextTick で 1 ティック遅らせる。
-           （ref がまだ取れないタイミングでの offsetHeight 0 回避）
+// 行番号列は常に固定幅
+const rowNumberColumnStyle = {
+    flex: `0 0 ${ROW_LABEL_WIDTH}`,
+    width: ROW_LABEL_WIDTH,
+};
 
-        5. _ro を disconnect している理由
-           Livewire 等でパーシャル再描画すると init が再度走ることがあり、そのたびに observe が二重になると
-           コールバックが複数回登録される。再セットアップ前に古い ResizeObserver を切る。
+const cells = ref(
+    Array.from({ length: ROW_COUNT }, () =>
+        Array.from({ length: COL_COUNT }, () => ""),
+    ),
+);
 
-        6. Alpine.data を別ファイルにしない理由
-           alpine:init の登録順と、この Blade が読み込まれる順で「未定義」になり得るため、
-           x-data のオブジェクトに init() を直書きして読み込み順に依存しないようにしている。
+const rowClass = "flex w-full";
+const transitionClass = "transition-[width,flex] duration-300 ease-in-out";
 
-        【対応するコード位置の目安】
-           - topPx / navHeightPx / _ro … 下の x-data 直後のプロパティ
-           - init / $nextTick … DOM 確定後に計測するための待ち
-           - recalc … nav と緑帯の offsetHeight を読む本体
-           - ResizeObserver … nav・緑の「高さ変化」を監視
-           - window.resize … ウィンドウ幅変更でナビが折り返すケースの保険（RO と併用）
-           - bindScheduleScrollSync … 曜日ヘッダーとグリッド本体の横スクロールを同じ scrollLeft に揃える
-    --}}
-    <div class="space-y-0" x-data="{
-        topPx: 0,
-        navHeightPx: 0,
-        _ro: null,
-        _scrollSyncing: false,
-        bindScheduleScrollSync() {
-            const head = this.$refs.scheduleHeadScroll;
-            const body = this.$refs.scheduleBodyScroll;
-            if (!head || !body) return;
-            const sync = (src, dst) => {
-                if (this._scrollSyncing) return;
-                if (dst.scrollLeft === src.scrollLeft) return;
-                this._scrollSyncing = true;
-                dst.scrollLeft = src.scrollLeft;
-                this._scrollSyncing = false;
-            };
-            head.addEventListener('scroll', () => sync(head, body), { passive: true });
-            body.addEventListener('scroll', () => sync(body, head), { passive: true });
-        },
-        init() {
-            /* x-ref 確定後に offsetHeight を取る（上の Blade コメント 4） */
-            this.$nextTick(() => {
-                /* ナビ: layouts/navigation の先頭 nav。複数あるサイトでは querySelector を絞る */
-                const nav = document.querySelector('nav');
-                /* 緑帯: このコンポーネント内の x-ref（Alpine が束ねた後に参照可能） */
-                const green = this.$refs.greenStrip;
-    
-                const recalc = () => {
-                    const navH = nav ? nav.offsetHeight : 0;
-                    const greenH = green ? green.offsetHeight : 0;
-                    this.navHeightPx = Math.round(navH);
-                    /* 黄パネル sticky の top = ナビ下端までの距離 + 緑帯の高さ（＝緑の直下に黄を合わせる） */
-                    this.topPx = this.navHeightPx + Math.round(greenH);
-                };
-    
-                recalc();
-    
-                if (this._ro) {
-                    this._ro.disconnect();
-                }
-    
-                /* 高さが変わったら recalc。disconnect は二重 observe 防止（上の Blade コメント 5 参照） */
-                this._ro = new ResizeObserver(() => recalc());
-                if (nav) {
-                    this._ro.observe(nav);
-                }
-                if (green) {
-                    this._ro.observe(green);
-                }
-    
-                /* 幅変更でナビが折り返すときの再計算（RO と併用。Blade コメント 3 の補足） */
-                window.addEventListener('resize', recalc);
+const fieldClass =
+    "block min-h-[5rem] w-full resize-y rounded-md border-0 bg-transparent px-2 py-1.5 text-sm leading-relaxed text-gray-800 placeholder:text-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400";
 
-                /* 曜日行は overflow-x の外で sticky（topPx がビューポート基準になる）。ヘッダーと本体の横スクロール同期 */
-                this.bindScheduleScrollSync();
-            });
-        },
-    }">
-        <div x-ref="greenStrip" class="sticky z-40 border-b border-green-200 bg-green-100 px-4 py-3 shadow-sm"
-            :style="`top: ${navHeightPx}px`">
-            緑の固定帯（高さが変わっても ResizeObserver で追従）
+const cellBorderClass = "border-b border-r border-gray-300";
+
+const labelButtonClass =
+    "m-0 grid h-10 w-full grid-cols-1 grid-rows-1 overflow-hidden p-0 text-xs font-semibold leading-none transition-colors duration-300 hover:bg-gray-100";
+
+const labelTextClass =
+    "col-start-1 row-start-1 flex h-10 w-full min-w-0 items-center justify-center px-1 leading-none transition-opacity duration-300 ease-in-out";
+
+function columnStyle(colData, expanded) {
+    return expanded
+        ? { flex: "1 1 0%", minWidth: "0px" }
+        : {
+              flex: `0 0 ${colData.collapsedWidth}`,
+              width: colData.collapsedWidth,
+          };
+}
+
+function toggleColumn(colIndex) {
+    columnDatas.value[colIndex].expanded = !columnDatas.value[colIndex].expanded;
+}
+</script>
+
+<template>
+    <div
+        class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm"
+    >
+        <div class="border-b border-gray-200 bg-gray-50 px-4 py-3">
+            <h3 class="text-sm font-semibold text-gray-800">
+                相談計画入力（練習）
+            </h3>
+            <p class="mt-1 text-xs text-gray-500">
+                {{ ROW_COUNT }}行 ×
+                {{ COL_COUNT }}列のグリッド（列ラベルをクリックで幅を切り替え）
+            </p>
         </div>
-        <div class=" h-[200px] bg-pink-100"> ここにはスクロール時に消えてもいいやつが入る</div>
-        {{--
-            レイアウト: 黄パネルは幅固定。左列は flex-col。
-            曜日ヘッダーは overflow-x-auto の外で sticky + topPx（中に入れると top がスクロール枠基準でズレる）。
-            ヘッダー用と本体用で横スクロールを二段にし、bindScheduleScrollSync で scrollLeft を同期。
-            本体側は時間列 sticky left + 7×24 グリッド（合計高さ 1288 - ヘッダー 40）。
-        --}}
-        <div class="mx-auto flex w-full max-w-[1200px] items-start gap-2 bg-red-100 px-2 sm:px-4">
-            <div class="flex min-h-0 min-w-0 flex-1 flex-col">
-                @php
-                    /* 週グリッド検証用（ISO 週の並び: 月〜日） */
-                    $weekdayLabels = ['月', '火', '水', '木', '金', '土', '日'];
-                @endphp
-                <div
-                    class="rounded-sm border border-slate-400 bg-white text-xs text-slate-800 shadow-sm">
-                    {{-- 曜日: ビューポート基準の縦 sticky（overflow-x は子のみ） --}}
-                    <div class="sticky z-[35] shrink-0 bg-slate-100 shadow-sm" :style="`top: ${topPx}px`">
-                        <div x-ref="scheduleHeadScroll" class="overflow-x-auto">
-                            <div
-                                class="flex h-10 w-[960px] shrink-0 items-stretch border-b border-slate-300 font-medium">
-                                <div
-                                    class="sticky left-0 z-[36] flex w-14 shrink-0 items-center border-r border-slate-300 bg-slate-100 shadow-[4px_0_6px_-2px_rgba(15,23,42,0.12)]">
-                                </div>
-                                <div class="flex w-[904px] shrink-0">
-                                    @foreach ($weekdayLabels as $label)
-                                        <div
-                                            class="flex flex-1 items-center justify-center border-r border-slate-300 last:border-r-0">
-                                            {{ $label }}
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
+
+        <div class="overflow-x-auto p-4">
+            <div
+                class="min-w-[48rem] overflow-hidden rounded-lg border border-gray-300 text-sm"
+            >
+                <div :class="[rowClass, 'bg-gray-50']">
+                    <div
+                        :class="[cellBorderClass, 'h-10 shrink-0']"
+                        :style="rowNumberColumnStyle"
+                    >
+                        <div
+                            class="flex h-10 items-center justify-center text-xs font-semibold text-gray-600"
+                        >
+                            #
                         </div>
                     </div>
-                    {{-- グリッド本体: 横スクロールはヘッダーと同期。スクロールバーは上（曜日）のみ表示（下は非表示で操作は同じ） --}}
+
                     <div
-                        x-ref="scheduleBodyScroll"
-                        class="overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:[display:none]">
-                        <div class="inline-flex h-[1248px] w-[960px] shrink-0 flex-col">
-                            <div class="flex min-h-0 flex-1">
-                                <div
-                                    class="sticky left-0 z-20 flex w-14 shrink-0 flex-col border-r border-slate-300 bg-slate-50 text-[11px] text-slate-600 shadow-[4px_0_8px_-2px_rgba(15,23,42,0.15)]">
-                                    @for ($h = 0; $h < 24; $h++)
-                                        <div
-                                            class="flex flex-1 items-start justify-end border-b border-slate-200 py-0.5 pr-1 leading-none">
-                                            {{ sprintf('%d:00', $h) }}
-                                        </div>
-                                    @endfor
-                                </div>
-                                <div class="grid h-full w-[904px] shrink-0 grid-cols-7 border-slate-200"
-                                    style="grid-template-rows: repeat(24, minmax(0, 1fr));">
-                                    @for ($h = 0; $h < 24; $h++)
-                                        @for ($c = 0; $c < 7; $c++)
-                                            <div
-                                                class="box-border min-h-0 border-b border-r border-slate-200 bg-blue-50/40 [&:nth-child(7n)]:border-r-0">
-                                            </div>
-                                        @endfor
-                                    @endfor
-                                </div>
-                            </div>
-                        </div>
+                        v-for="(colData, colIndex) in columnDatas"
+                        :key="colData.key"
+                        :class="[
+                            cellBorderClass,
+                            transitionClass,
+                            'h-10 shrink-0 overflow-hidden',
+                            colIndex === columnDatas.length - 1 ? 'border-r-0' : '',
+                        ]"
+                        :style="columnStyle(colData, colData.expanded)"
+                    >
+                        <button
+                            type="button"
+                            :class="[
+                                labelButtonClass,
+                                colData.expanded
+                                    ? 'text-gray-700'
+                                    : 'bg-gray-200 text-gray-500',
+                            ]"
+                            @click="toggleColumn(colIndex)"
+                        >
+                            <span
+                                :class="[
+                                    labelTextClass,
+                                    colData.expanded
+                                        ? 'opacity-100'
+                                        : 'pointer-events-none opacity-0',
+                                ]"
+                            >
+                                <span
+                                    class="w-full min-w-0 truncate text-center leading-none"
+                                >
+                                    {{ colData.longLabel }}
+                                </span>
+                            </span>
+                            <span
+                                :class="[
+                                    labelTextClass,
+                                    colData.expanded
+                                        ? 'pointer-events-none opacity-0'
+                                        : 'opacity-100',
+                                ]"
+                            >
+                                {{ colData.shortLabel }}
+                            </span>
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            <div class="w-[300px] shrink-0 self-start bg-yellow-100 shadow"
-                :style="`position: sticky; top: ${topPx}px;`">
-                <div class="p-4">
-                    <p class="text-sm font-medium text-gray-700">操作パネル</p>
-                    <p class="mt-2 text-xs text-gray-500">
-                        sticky の top = ナビ + 緑帯（<span x-text="topPx"></span> px）
-                    </p>
+                <div
+                    v-for="(row, rowIndex) in cells"
+                    :key="`row-${rowIndex}`"
+                    :class="[
+                        rowClass,
+                        rowIndex === cells.length - 1
+                            ? '[&>div]:border-b-0'
+                            : '',
+                    ]"
+                >
+                    <div
+                        :class="[cellBorderClass, 'shrink-0 bg-gray-50']"
+                        :style="rowNumberColumnStyle"
+                    >
+                        <div
+                            class="flex h-full items-center justify-center px-1 py-2 text-xs font-medium text-gray-600"
+                        >
+                            {{ rowIndex + 1 }}
+                        </div>
+                    </div>
+
+                    <div
+                        v-for="(colData, colIndex) in columnDatas"
+                        :key="`cell-${rowIndex}-${colData.key}`"
+                        :class="[
+                            cellBorderClass,
+                            transitionClass,
+                            'shrink-0 overflow-hidden p-1',
+                            colIndex === columnDatas.length - 1 ? 'border-r-0' : '',
+                            !colData.expanded ? 'bg-gray-50/60' : '',
+                        ]"
+                        :style="columnStyle(colData, colData.expanded)"
+                    >
+                        <textarea
+                            v-model="cells[rowIndex][colIndex]"
+                            rows="3"
+                            :class="[
+                                fieldClass,
+                                'transition-opacity duration-300 ease-in-out',
+                                colData.expanded
+                                    ? 'opacity-100'
+                                    : 'pointer-events-none opacity-0',
+                            ]"
+                            :placeholder="`${rowIndex + 1}-${colData.shortLabel}`"
+                            :tabindex="colData.expanded ? 0 : -1"
+                        />
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</x-app-layout>
+</template>
+
 
 
